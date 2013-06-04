@@ -1,0 +1,9 @@
+[{
+   "columnCount" : 5,
+   "createOption" : "NONE",
+   "rowCount" : 60,
+   "schemaName" : "My_DB1",
+   "storageEngine" : "qa_blackhole",
+   "tableColumns" : [ "column0", "column1", "column2", "column3", "column4" ],
+   "tableName" : "Test1"
+}]

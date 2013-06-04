@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Queralyzer</title>
+
+    <!--<meta name="viewport" content="width=device-width, initial-scale=1.0">-->
+    <!--<link rel="stylesheet" href="/bootstrap/css/bootstrap-responsive.min.css">-->
+
+    <link rel="stylesheet" href="bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/queralyzer.css">
+    <link rel="stylesheet" href="css/jquery-linedtextarea.css">
+
+    <script src="js/lib/d3.min.js" type="text/javascript"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+
+    <script src="js/queralyzer.js" type="text/javascript"></script>
+    <script src="bootstrap/js/bootstrap.min.js" type="text/javascript"></script>
+    <script src="js/lib/jquery-linedtextarea.js" type="text/javascript"></script>
+
+    <script type="text/javascript">
+        $(function () {
+//            var ht = $("#userQuery").parent().height();
+            var windowHeight = window.innerHeight;
+            $(".container-fluid").height(windowHeight);
+            $(".queryEditor").height(windowHeight*0.6);
+            $(".metadata").height(windowHeight*0.3);
+            $(".tree").height(windowHeight*0.92);
+
+            $(document).on("click", "i.icon-edit", function (e) {
+                var icon = $(e.target);
+                var row = icon.closest("tr");
+                if (icon.hasClass("icon-edit")) {
+                    icon.removeClass("icon-edit");
+                    icon.addClass("icon-ok");
+
+                    row.find("div").each(function (index, elem) {
+                        var element = $(elem);
+                        if (!element.hasClass("action")) {
+                            element.attr("contenteditable", true);
+                        }
+                    });
+                }
+            });
+
+            $(document).on("click", "i.icon-ok", function (e) {
+                var icon = $(e.target);
+                var newData = {};
+                var row = icon.closest("tr");
+                var rowId = row.attr("id")
+                var tableContainer = icon.closest("table").parent();
+                if (icon.hasClass("icon-ok")) {
+                    icon.removeClass("icon-ok");
+                    icon.addClass("icon-edit");
+
+                    row.find("div").each(function (index, elem) {
+                        var element = $(elem);
+                        if (!element.hasClass("action")) {
+                            newData[element.attr("class")]= element.text();
+                            element.attr("contenteditable", false);
+                        }
+                    });
+                    var id = tableContainer.attr("id");
+
+                    if(id==="tableMetadata"){
+                        queralyzer.updateTableMetaData(rowId,newData)
+                    }
+                    else{
+                        queralyzer.updateIndexMetaData(rowId,newData)
+                    }
+                }
+            });
+
+            $("#userQuery").attr("rows", 15);
+            $("#userQuery").linedtextarea();
+
+            $('#submitButton').click(function (e) {
+                e.preventDefault();
+                var data = $('form#queryForm').serialize();
+
+                $.post('/query', data, function (result) {
+                            $("#treeContainer").empty();
+                            queralyzer.renderTree(result);
+                        },
+                        'json'
+                );
+                $.getJSON('/tablemetadata',function(result){
+                    $("#tableMetadata").empty();
+			queralyzer.addTableMetadata(result);
+            });
+});
+	/*	$.getJSON('/indexmetadata',function(result){
+                    $("#tableMetadata").empty();
+                        queralyzer.addIndexMetadata(result);
+            });*/
+
+
+            $('input#filter').on('keyup', function () {
+                var rex = new RegExp($(this).val(), 'i');
+                $('.searchable tr').hide();
+                $('.searchable tr').filter(function () {
+                   return rex.test($(this).text());
+                }).show();
+            });
+
+            queralyzer.addTableMetadata("#tableMetadata");
+            queralyzer.addIndexMetadata("#indexMetadata");
+
+        });
+    </script>
+</head>
+<body>
+<header>
+    <div class='headerWrapper'><a class='logo' href='index.html'></a></div>
+</header>
+<div class="container-fluid">
+    <div class="row-fluid" style="margin:1.6%;width: 98%;">
+        <div class="span5">
+            <div class="boxed queryEditor">
+                <form id="queryForm">
+                    <fieldset>
+                        <legend> Query
+                            <button id="submitButton" style="margin-top:5px;" class="pull-right btn btn-success">Run<i
+                                    class="icon-play icon-white"></i></button>
+                        </legend>
+                        <textarea id="userQuery" name="query" style="width:97%;word-wrap:break-word;"
+                                  placeholder="Enter your query here"></textarea>
+                    </fieldset>
+                </form>
+            </div>
+            <div class="boxed metadata" style="overflow-y: auto;">
+                <div class="tabbable">
+                    <ul class="nav nav-tabs">
+                        <li class="active"><a href="#tableMetadata" data-toggle="tab">Tables</a></li>
+                        <li><a href="##indexMetadata" data-toggle="tab">Indexes</a></li>
+                        <li class="pull-right" style="margin-right: 5px;"><input type="text" id="filter">&nbsp;<i
+                                class="icon-search"></i></li>
+                    </ul>
+                    <div class="tab-content">
+                        <div class="tab-pane active" id="tableMetadata">
+                        </div>
+                        <div class="tab-pane" id="indexMetadata">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="span7" style="margin-left: 0.5%;">
+            <div id="result" class="boxed tree">
+                <legend> Tree</legend>
+                <div id="treeContainer"></div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,12 @@
+[{
+   "cardinality" : 100,
+   "columnCount" : 5,
+   "indexColumns" : [ "column0", "column1", "column2", "column3", "column4" ],
+   "indexName" : "i1",
+   "indexType" : "PRIMARY",
+   "isNullable" : true,
+   "nonUnique" : true,
+   "schemaName" : "My_DB1",
+   "storageEngine" : "qa_blackhole",
+   "tableName" : "Test1"
+}]
