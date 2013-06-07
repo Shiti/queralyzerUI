@@ -12,8 +12,6 @@ function ExplainTree(explainJsonOutput) {
         return false;
     }
 
-    //helper functions
-
     function indexById(arr, id) {
         var i = 0,
             r,
@@ -56,7 +54,6 @@ function ExplainTree(explainJsonOutput) {
         }
     }
 
-
     function filesort(node) {
         return {
             type: "Filesort",
@@ -82,12 +79,12 @@ function ExplainTree(explainJsonOutput) {
         return node;
     }
 
-
     function transform(row) {
         var sub = row.type,
             childNode,
             warn,
             funcName,
+            extra,
             parentNode = {},
             noMatchingRow = [
                 "Impossible (?:WHERE|HAVING)(?: noticed after reading const tables)?",
@@ -96,46 +93,39 @@ function ExplainTree(explainJsonOutput) {
 
         funcName = "node_" + sub;
 
+        extra = row.Extra;
         childNode = sub
-            ? rowType[funcName](row) : row.Extra.match(/No tables/)
+            ? rowType[funcName](row) : extra.match(/No tables/)
             ? { type: (!row.select_type.match(/^(?:PRIMARY|SIMPLE)$/) ? row.select_type : 'DUAL') }
-            : row.Extra.match(new RegExp("(?:" + noMatchingRow + ")", "i"))
-            ? { type: 'IMPOSSIBLE' } : row.Extra.match(/optimized away/)
+            : extra.match(new RegExp("(?:" + noMatchingRow + ")", "i"))
+            ? { type: 'IMPOSSIBLE' } : extra.match(/optimized away/)
             ? { type: 'CONSTANT' } : false;
 
         if (!childNode) {
             return;
         }
 
-        warn = row.Extra.match(new RegExp(noMatchingRow));
+        warn = extra.match(new RegExp(noMatchingRow));
 
         if (warn) {
             parentNode.warning = warn;
         }
-        if (row.Extra.match(/Using where/)) {
-            parentNode.type = "Filter with WHERE";
+        else {
             parentNode.children = [childNode];
-        }
-        if (row.Extra.match(/Using join buffer/)) {
-            parentNode.type = "Join buffer";
-            parentNode.children = [childNode];
-        }
-        if (row.Extra.match(/Distinct|Not exists/)) {
-            parentNode.type = "Distinct/Not-Exists";
-            parentNode.children = [childNode];
-        }
-        if (row.Extra.match(/Range checked for each record \(\w+ map: ([^\)]+)\)/)) {
-            /* Skipping possible keys for now*/
-            parentNode = {
-                type: 'Re-evaluate indexes each row',
-                children: [childNode]
-            };
-        }
-        if (row.Extra.match(/Using filesort/)) {
-            parentNode = filesort(childNode);
-        }
-        if (row.Extra.match(/Using temporary/)) {
-            parentNode = temporary(childNode, row.table, 1);
+            if (extra.match(/Using where/)) {
+                parentNode.type = "Filter with WHERE";
+            } else if (extra.match(/Using join buffer/)) {
+                parentNode.type = "Join buffer";
+            } else if (extra.match(/Distinct|Not exists/)) {
+                parentNode.type = "Distinct/Not-Exists";
+            } else if (extra.match(/Range checked for each record \(\w+ map: ([^\)]+)\)/)) {
+                /* Skipping possible keys for now*/
+                parentNode.type = 'Re-evaluate indexes each row';
+            } else if (extra.match(/Using filesort/)) {
+                parentNode = filesort(childNode);
+            } else if (extra.match(/Using temporary/)) {
+                parentNode = temporary(childNode, row.table, 1);
+            }
         }
 
         parentNode.id = row.id;
@@ -143,15 +133,46 @@ function ExplainTree(explainJsonOutput) {
         return parentNode;
     }
 
-    //generating tree
-    function buildQueryPlan(rows) {
-        var row,
-            kids,
-            ids = [],
+    function generateUnionTree(rows) {
+        var row = rows.shift,
+            ids = row.table.match(/(\d+)/g),
             enclosingScope,
-            tableNames = [],
+            tableNames,
             tree,
             node,
+            kids = [];
+
+        //SUBQUERY
+        if (rows[0].select_type.match(/SUBQUERY/)) {
+            enclosingScope = rows[0];
+        }
+
+        //doubtful about this foreach loop
+        ids.forEach(function (elem, index) {
+            var start = rows.indexOf(elem),
+                end = index < ids.length - 1 ? rows.indexOf(ids[index + 1]) : rows.length - 1;
+            kids.push(buildQueryPlan(rows.splice(start, end - start)));
+        });
+
+        row.children = kids;
+        tableNames = kids.map(function (k) {
+            return recursiveTableName(k) || "<none>";
+        });
+        row.table = "union(" + tableNames.join(",");
+        tree = transform(row);
+        if (enclosingScope) {
+            node = transform(enclosingScope);
+            node.children = [tree];
+            tree = node;
+        }
+        return tree;
+    }
+
+    //generating tree
+    function buildQueryPlan(rows) {
+        var kids,
+            enclosingScope,
+            tree,
             derived,
             derivedId,
             first,
@@ -168,34 +189,10 @@ function ExplainTree(explainJsonOutput) {
         if (rows.length === 0) {
             return;
         }
+
         //UNION
         if (rows[0].select_type === "UNION RESULT") {
-            row = rows.shift;
-            ids = row.table.match(/(\d+)/g);
-
-            //SUBQUERY
-            if (rows[0].select_type.match(/SUBQUERY/)) {
-                enclosingScope = rows[0];
-            }
-
-            //doubtful about this foreach loop
-            ids.forEach(function (elem, index) {
-                var start = rows.indexOf(elem),
-                    end = index < ids.length - 1 ? rows.indexOf(ids[index + 1]) : rows.length - 1;
-                kids.push(buildQueryPlan(rows.splice(start, end - start)));
-            });
-
-            row.children = kids;
-            tableNames = kids.map(function (k) {
-                return recursiveTableName(k) || "<none>";
-            });
-            row.table = "union(" + tableNames.join(",");
-            tree = transform(row);
-            if (enclosingScope) {
-                node = transform(enclosingScope);
-                node.children = [tree];
-                tree = node;
-            }
+            tree = generateUnionTree(rows);
             return tree;
         }
 
@@ -266,29 +263,32 @@ function ExplainTree(explainJsonOutput) {
         return tree;
     }
 
-    //main function
-    function process(rows) {
-        var lastId = 0,
-            reordered = [],
-            tree,
-            unionRows,
-            otherRows,
-            unionForward;
-        rows.forEach(function (r, index) {
-            r.rowId = index;
-            r.Extra = r.Extra || "";
 
-            if (r.table && !r.table.match(/\./)) {
-                if (!r.id && r.table.match(/^<union(\d+)/)) {
-                    var newId = customMatch(r.table, /^<union(\d+)/);
-                    r.id = newId;
+    function isDataCorrect(rows) {
+        rows.forEach(function (row, index) {
+            row.rowId = index;
+            row.Extra = row.Extra || "";
+
+            if (row.table && !row.table.match(/\./)) {
+                if (!row.id && row.table.match(/^<union(\d+)/)) {
+                    var newId = customMatch(row.table, /^<union(\d+)/);
+                    row.id = newId;
                 } else {
-                    return; //"Unexpected NULL in id column, please report as a bug";
+                    return false; //"Unexpected NULL in id column, please report as a bug"
                 }
             }
-            return;// "UNION has too many tables:" + r.table;
+            return false; //"UNION has too many tables"
         });
+        return true;
+    }
 
+    function reorderRows(rows) {
+
+        var unionRows,
+            unionForward,
+            otherRows,
+            lastId = 0,
+            reordered = [];
 
         unionRows = $.grep(rows, function (r) {
             return r.select_type === "UNION RESULT";
@@ -312,12 +312,22 @@ function ExplainTree(explainJsonOutput) {
             reordered.push(r);
             lastId = id;
         });
-
-        tree = buildQueryPlan(reordered);
-        return tree;
+        return reordered;
     }
 
-    console.log(process(explainJsonOutput));
+    //main function
+    function process(rows) {
+        var reordered,
+            tree;
+        if (isDataCorrect(rows)) {
+            reordered = reorderRows(rows);
+            tree = buildQueryPlan(reordered);
+            return tree;
+        }
+
+    }
+
+//    console.log(process(explainJsonOutput));
 
 }
 
