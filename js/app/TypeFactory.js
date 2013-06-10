@@ -1,19 +1,16 @@
-/**
- * Created with IntelliJ IDEA.
- * User: shiti
- * Date: 6/7/13
- * Time: 12:04 PM
- * To change this template use File | Settings | File Templates.
- */
-var TypeFactory = (function () {
+var queralyzer = new Object();
 
-    function customMatch(source, pattern) {
-        var result = source.match(pattern);
-        if (result) {
-            return result[1];
-        }
-        return false;
+queralyzer.customMatch = function (source, pattern) {
+    var result = source.match(pattern);
+    if (result) {
+        return result[1];
     }
+    return false;
+};
+
+queralyzer.TypeFactory = (function () {
+
+    "use strict";
 
     //helper functions for type functions
     function recursiveIndexMerge(row, spec, num) {
@@ -27,7 +24,7 @@ var TypeFactory = (function () {
         var type = false,
             node;
         if (row.type) {
-            type = customMatch(row.table, /^(derived|union)\(/);
+            type = queralyzer.customMatch(row.table, /^(derived|union)\(/);
         }
         node = {
             type: (row.type && type) ? type.toUpperCase() : "Table",

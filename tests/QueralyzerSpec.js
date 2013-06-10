@@ -12,7 +12,7 @@ describe("QueralyzerSpec", function () {
             "table": "user",
             "type": "ALL"
         }];
-        expect(ExplainTree(data)).toBeDefined();
+        expect(queralyzer.ExplainTree.generateTree(data)).toBeDefined();
     });
 
     it("works where table name is not given", function () {  //access_plan_3
@@ -259,7 +259,7 @@ describe("QueralyzerSpec", function () {
             }
         ];
 
-        expect(ExplainTree(data)).toBeDefined();
+        expect(queralyzer.ExplainTree.generateTree(data)).toBeDefined();
 
     });
 
@@ -374,7 +374,7 @@ describe("QueralyzerSpec", function () {
                 "type": "ALL"
             }
         ];
-        expect(ExplainTree(data)).toBeDefined();
+        expect(queralyzer.ExplainTree.generateTree(data)).toBeDefined();
 
     });
 
@@ -573,7 +573,7 @@ describe("QueralyzerSpec", function () {
                 "type": "ALL"
             }
         ];
-        expect(ExplainTree(data)).toBeDefined();
+        expect(queralyzer.ExplainTree.generateTree(data)).toBeDefined();
 
     });
 

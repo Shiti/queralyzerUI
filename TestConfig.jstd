@@ -6,8 +6,7 @@ load:
 
  - js/TypeFactory.js
  - js/ExplainTree.js
- - js/queralyzer.js
-
+ - js/App.js
 serve:
  - data/access_plan_1.json
  - data/access_plan_2.json

@@ -1,14 +1,6 @@
 /*global $*/
-function ExplainTree(explainJsonOutput) {
+queralyzer.ExplainTree=(function () {
     "use strict";
-
-    function customMatch(source, pattern) {
-        var result = source.match(pattern);
-        if (result.length > 1) {
-            return result[1];
-        }
-        return false;
-    }
 
     function indexById(arr, id) {
         var i = 0,
@@ -33,7 +25,7 @@ function ExplainTree(explainJsonOutput) {
             return node.table;
         }
         if (node.key) {
-            return customMatch(node.key, /(.*?)->/);
+            return queralyzer.customMatch(node.key, /(.*?)->/);
         }
         if (node.type === "Bookmark lookup") {
             return node.children[1].table;
@@ -93,7 +85,7 @@ function ExplainTree(explainJsonOutput) {
 
         extra = row.Extra;
         childNode = sub
-            ? TypeFactory[funcName](row) : extra.match(/No tables/)
+            ? queralyzer.TypeFactory[funcName](row) : extra.match(/No tables/)
             ? { type: (!row.select_type.match(/^(?:PRIMARY|SIMPLE)$/) ? row.select_type : 'DUAL') }
             : extra.match(new RegExp("(?:" + noMatchingRow + ")", "i"))
             ? { type: 'IMPOSSIBLE' } : extra.match(/optimized away/)
@@ -201,7 +193,7 @@ function ExplainTree(explainJsonOutput) {
             return table && table.match(/^<derived\d+>$/);
         })[0];
         while (filteredRow) {
-            derivedId = customMatch(filteredRow.table, /^<derived(\d+)>$/);
+            derivedId = queralyzer.customMatch(filteredRow.table, /^<derived(\d+)>$/);
             start = indexById(rows, derivedId);
             end = start;
             while (end < rows.length && rows[end].id >= derivedId) {
@@ -263,13 +255,14 @@ function ExplainTree(explainJsonOutput) {
 
 
     function isDataCorrect(rows) {
+        var newId;
         rows.forEach(function (row, index) {
             row.rowId = index;
             row.Extra = row.Extra || "";
 
             if (row.table && !row.table.match(/\./)) {
                 if (!row.id && row.table.match(/^<union(\d+)/)) {
-                    var newId = customMatch(row.table, /^<union(\d+)/);
+                    newId = queralyzer.customMatch(row.table, /^<union(\d+)/);
                     row.id = newId;
                 } else {
                     return false; //"Unexpected NULL in id column, please report as a bug"
@@ -313,20 +306,19 @@ function ExplainTree(explainJsonOutput) {
         return reordered;
     }
 
-    //main function
-    function generateTree(rows) {
-        var reordered,
-            tree;
-        if (isDataCorrect(rows)) {
-            reordered = reorderRows(rows);
-            tree = buildQueryPlan(reordered);
-            return tree;
+    return {
+        //main function
+        generateTree:function(rows){
+            var reordered,
+                tree;
+            if (isDataCorrect(rows)) {
+                reordered = reorderRows(rows);
+                tree = buildQueryPlan(reordered);
+                return tree;
+            }
         }
-
     }
 
-    return generateTree(explainJsonOutput);
-
-}
+})();
 
 
