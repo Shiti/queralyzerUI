@@ -1,6 +1,7 @@
-var queralyzer = new Object();
+var queralyzer = {};
 
 queralyzer.customMatch = function (source, pattern) {
+    "use strict";
     var result = source.match(pattern);
     if (result) {
         return result[1];
@@ -73,7 +74,7 @@ queralyzer.TypeFactory = (function () {
         return node;
     }
 
-    return{ // row type functions
+    return { // row type functions
 
         node_ALL: function (row) {
             return {
@@ -133,5 +134,5 @@ queralyzer.TypeFactory = (function () {
             return bookmarkLookup(merge, row);
         }
 
-    }
+    };
 })();

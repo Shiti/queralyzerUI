@@ -1,5 +1,5 @@
 /*global $*/
-queralyzer.ExplainTree=(function () {
+queralyzer.ExplainTree = (function () {
     "use strict";
 
     function indexById(arr, id) {
@@ -99,8 +99,7 @@ queralyzer.ExplainTree=(function () {
 
         if (warn) {
             parentNode.warning = warn;
-        }
-        else {
+        } else {
             parentNode.children = [childNode];
             if (extra.match(/Using where/)) {
                 parentNode.type = "Filter with WHERE";
@@ -123,9 +122,12 @@ queralyzer.ExplainTree=(function () {
         return parentNode;
     }
 
-    function generateUnionTree(rows) {
+    function generateUnionNode(rows) {
         var row = rows.shift,
             ids = row.table.match(/(\d+)/g),
+            i,
+            start,
+            end,
             enclosingScope,
             tableNames,
             tree,
@@ -137,18 +139,17 @@ queralyzer.ExplainTree=(function () {
             enclosingScope = rows[0];
         }
 
-        //doubtful about this foreach loop
-        ids.forEach(function (elem, index) {
-            var start = rows.indexOf(elem),
-                end = index < ids.length - 1 ? rows.indexOf(ids[index + 1]) : rows.length - 1;
+        for (i = 0; i <= ids.length; i++) {
+            start = indexById(rows, ids[i]);
+            end = (i < ids.length) ? indexById(rows, ids[i + 1]) : rows.length;
             kids.push(buildQueryPlan(rows.splice(start, end - start)));
-        });
+        }
 
         row.children = kids;
         tableNames = kids.map(function (k) {
             return recursiveTableName(k) || "<none>";
         });
-        row.table = "union(" + tableNames.join(",");
+        row.table = "union(" + tableNames.join(",") + ")";
         tree = transformRowToNode(row);
         if (enclosingScope) {
             node = transformRowToNode(enclosingScope);
@@ -158,40 +159,19 @@ queralyzer.ExplainTree=(function () {
         return tree;
     }
 
-    //generating tree
-    function buildQueryPlan(rows) {
-        var kids,
-            enclosingScope,
-            tree,
-            derived,
+    function generateDerivedNode(rows) {
+        var filteredRow,
             derivedId,
-            first,
-            isTempFilesort = false,
-            firstExtra,
-            filteredRow,
             start,
             end,
-            scope,
-            i = 0,
-            r,
-            firstNonConst;
-
-        if (rows.length === 0) {
-            return;
-        }
-
-        //UNION
-        if (rows[0].select_type === "UNION RESULT") {
-            tree = generateUnionTree(rows);
-            return tree;
-        }
-
-        //DERIVED TABLES
+            enclosingScope,
+            kids;
 
         filteredRow = $.grep(rows, function (e) {
             var table = e.table;
             return table && table.match(/^<derived\d+>$/);
         })[0];
+
         while (filteredRow) {
             derivedId = queralyzer.customMatch(filteredRow.table, /^<derived(\d+)>$/);
             start = indexById(rows, derivedId);
@@ -204,11 +184,39 @@ queralyzer.ExplainTree=(function () {
             kids = buildQueryPlan(enclosingScope);
             filteredRow.children = [kids];
             filteredRow.table = "derived(" + (recursiveTableName(kids) || "<none>") + ")";
+
             filteredRow = $.grep(rows, function (e) {
                 var table = e.table;
                 return table && table.match(/^<derived\d+>$/);
             })[0];
         }
+    }
+
+    //generating tree
+    function buildQueryPlan(rows) {
+        var enclosingScope,
+            tree,
+            first,
+            isTempFilesort = false,
+            firstExtra,
+            end,
+            scope,
+            i = 0,
+            r,
+            firstNonConst;
+
+        if (rows.length === 0) {
+            return;
+        }
+
+        //UNION
+        if (rows[0].select_type === "UNION RESULT") {
+            tree = generateUnionNode(rows);
+            return tree;
+        }
+
+        //DERIVED TABLES
+        generateDerivedNode(rows);
 
         //Filesort
         first = rows.shift();
@@ -286,9 +294,7 @@ queralyzer.ExplainTree=(function () {
         });
 
         unionForward = unionRows.map(function (r) {
-            var a = {}, id = r.id;
-            a[id] = r;
-            return a;
+            r.id = rows.indexOf(r);
         });
 
         otherRows = $.grep(rows, function (r) {
@@ -308,7 +314,7 @@ queralyzer.ExplainTree=(function () {
 
     return {
         //main function
-        generateTree:function(rows){
+        generateTree: function (rows) {
             var reordered,
                 tree;
             if (isDataCorrect(rows)) {
@@ -317,7 +323,7 @@ queralyzer.ExplainTree=(function () {
                 return tree;
             }
         }
-    }
+    };
 
 })();
 
