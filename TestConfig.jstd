@@ -4,9 +4,10 @@ load:
  - js/lib/jasmine-1.3.1.js
  - js/lib/jasmineAdapter.js
 
- - js/TypeFactory.js
- - js/ExplainTree.js
- - js/App.js
+ - js/app/TypeFactory.js
+ - js/app/ExplainTree.js
+ - js/app/App.js
+ - js/app/util.js
 serve:
  - data/access_plan_1.json
  - data/access_plan_2.json
