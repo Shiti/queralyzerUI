@@ -1,0 +1,111 @@
+[
+    {
+        "Extra": "NULL",
+        "id": "1",
+        "key": "NULL",
+        "key_len": "NULL",
+        "possible_keys": "NULL",
+        "ref": "NULL",
+        "rows": "20000",
+        "select_type": "PRIMARY",
+        "table": "",
+        "type": "ALL"
+    },
+    {
+        "Extra": "NULL",
+        "id": "2",
+        "key": "NULL",
+        "key_len": "NULL",
+        "possible_keys": "NULL",
+        "ref": "NULL",
+        "rows": "10000",
+        "select_type": "DERIVED",
+        "table": "actor_1",
+        "type": "ALL"
+    },
+    {
+        "Extra": "NULL",
+        "id": "3",
+        "key": "NULL",
+        "key_len": "NULL",
+        "possible_keys": "NULL",
+        "ref": "NULL",
+        "rows": "10000",
+        "select_type": "UNION",
+        "table": "actor_2",
+        "type": "ALL"
+    },
+    {
+        "Extra": "Using temporary",
+        "id": "NULL",
+        "key": "NULL",
+        "key_len": "NULL",
+        "possible_keys": "NULL",
+        "ref": "NULL",
+        "rows": "NULL",
+        "select_type": "UNION RESULT",
+        "table": "",
+        "type": "ALL"
+    },
+    {
+        "Extra": "NULL",
+        "id": "4",
+        "key": "NULL",
+        "key_len": "NULL",
+        "possible_keys": "NULL",
+        "ref": "NULL",
+        "rows": "20000",
+        "select_type": "UNION",
+        "table": "",
+        "type": "ALL"
+    },
+    {
+        "Extra": "NULL",
+        "id": "5",
+        "key": "NULL",
+        "key_len": "NULL",
+        "possible_keys": "NULL",
+        "ref": "NULL",
+        "rows": "10000",
+        "select_type": "DERIVED",
+        "table": "actor_3",
+        "type": "ALL"
+    },
+    {
+        "Extra": "NULL",
+        "id": "6",
+        "key": "NULL",
+        "key_len": "NULL",
+        "possible_keys": "NULL",
+        "ref": "NULL",
+        "rows": "10000",
+        "select_type": "UNION",
+        "table": "actor_4",
+        "type": "ALL"
+    },
+    {
+        "Extra": "Using temporary",
+        "id": "NULL",
+        "key": "NULL",
+        "key_len": "NULL",
+        "possible_keys": "NULL",
+        "ref": "NULL",
+        "rows": "NULL",
+        "select_type": "UNION RESULT",
+        "table": "",
+        "type": "ALL"
+    },
+    {
+        "Extra": "Using temporary",
+        "id": "NULL",
+        "key": "NULL",
+        "key_len": "NULL",
+        "possible_keys": "NULL",
+        "ref": "NULL",
+        "rows": "NULL",
+        "select_type": "UNION RESULT",
+        "table": "",
+        "type": "ALL"
+    }
+]
+

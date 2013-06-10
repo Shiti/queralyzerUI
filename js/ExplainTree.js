@@ -2,8 +2,6 @@
 function ExplainTree(explainJsonOutput) {
     "use strict";
 
-    var rowType = new TypeFactory();
-
     function customMatch(source, pattern) {
         var result = source.match(pattern);
         if (result.length > 1) {
@@ -54,10 +52,10 @@ function ExplainTree(explainJsonOutput) {
         }
     }
 
-    function filesort(node) {
+    function filesort(childNode) {
         return {
             type: "Filesort",
-            children: [node]
+            children: [childNode]
         };
     }
 
@@ -79,7 +77,7 @@ function ExplainTree(explainJsonOutput) {
         return node;
     }
 
-    function transform(row) {
+    function transformRowToNode(row) {
         var sub = row.type,
             childNode,
             warn,
@@ -95,7 +93,7 @@ function ExplainTree(explainJsonOutput) {
 
         extra = row.Extra;
         childNode = sub
-            ? rowType[funcName](row) : extra.match(/No tables/)
+            ? TypeFactory[funcName](row) : extra.match(/No tables/)
             ? { type: (!row.select_type.match(/^(?:PRIMARY|SIMPLE)$/) ? row.select_type : 'DUAL') }
             : extra.match(new RegExp("(?:" + noMatchingRow + ")", "i"))
             ? { type: 'IMPOSSIBLE' } : extra.match(/optimized away/)
@@ -159,9 +157,9 @@ function ExplainTree(explainJsonOutput) {
             return recursiveTableName(k) || "<none>";
         });
         row.table = "union(" + tableNames.join(",");
-        tree = transform(row);
+        tree = transformRowToNode(row);
         if (enclosingScope) {
-            node = transform(enclosingScope);
+            node = transformRowToNode(enclosingScope);
             node.children = [tree];
             tree = node;
         }
@@ -236,13 +234,13 @@ function ExplainTree(explainJsonOutput) {
             }
         }
         scope = first.id;
-        tree = transform(first);
+        tree = transformRowToNode(first);
         while (i < rows.length) {
             r = rows[i];
             if (r.id === scope) {
                 tree = {
                     type: "JOIN",
-                    children: [tree, transform(r)]
+                    children: [tree, transformRowToNode(r)]
                 };
                 i += 1;
             } else {
@@ -316,7 +314,7 @@ function ExplainTree(explainJsonOutput) {
     }
 
     //main function
-    function process(rows) {
+    function generateTree(rows) {
         var reordered,
             tree;
         if (isDataCorrect(rows)) {
@@ -327,7 +325,7 @@ function ExplainTree(explainJsonOutput) {
 
     }
 
-//    console.log(process(explainJsonOutput));
+    return generateTree(explainJsonOutput);
 
 }
 

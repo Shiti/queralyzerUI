@@ -5,7 +5,7 @@
  * Time: 12:04 PM
  * To change this template use File | Settings | File Templates.
  */
-function TypeFactory() {
+var TypeFactory = (function () {
 
     function customMatch(source, pattern) {
         var result = source.match(pattern);
@@ -76,66 +76,65 @@ function TypeFactory() {
         return node;
     }
 
-    // row type functions
-    this.node_ALL = function (row) {
-        return {
-            type: 'Table scan',
-            rows: row.rows,
-            children: [table(row)]
-        };
-    };
+    return{ // row type functions
 
-    this.node_fulltext = function (row) {
-        return indexAccess(row, "Fulltext scan");
-    };
+        node_ALL: function (row) {
+            return {
+                type: 'Table scan',
+                rows: row.rows,
+                children: [table(row)]
+            };
+        },
+        node_fulltext: function (row) {
+            return indexAccess(row, "Fulltext scan");
+        },
+        node_range: function (row) {
+            return indexAccess(row, "Index range scan");
+        },
 
-    this.node_range = function (row) {
-        return indexAccess(row, "Index range scan");
-    };
+        node_index: function (row) {
+            return indexAccess(row, "Index scan");
+        },
 
-    this.node_index = function (row) {
-        return indexAccess(row, "Index scan");
-    };
+        node_eq_ref: function (row) {
+            return indexAccess(row, "Unique index lookup");
+        },
 
-    this.node_eq_ref = function (row) {
-        return indexAccess(row, "Unique index lookup");
-    };
+        node_ref: function (row) {
+            return indexAccess(row, "Index lookup");
+        },
 
-    this.node_ref = function (row) {
-        return indexAccess(row, "Index lookup");
-    };
+        node_ref_or_null: function (row) {
+            return indexAccess(row, "Index lookup with extra null lookup");
+        },
 
-    this.node_ref_or_null = function (row) {
-        return indexAccess(row, "Index lookup with extra null lookup");
-    };
+        node_const: function (row) {
+            return indexAccess(row, "Constant index lookup");
+        },
 
-    this.node_const = function (row) {
-        return indexAccess(row, "Constant index lookup");
-    };
+        node_system: function (row) {
+            return {
+                type: 'Constant table access',
+                rows: row.rows,
+                children: [table(row)]
+            };
+        },
 
-    this.node_system = function (row) {
-        return {
-            type: 'Constant table access',
-            rows: row.rows,
-            children: [table(row)]
-        };
-    };
+        node_unique_subquery: function (row) {
+            return indexAccess(row, "Unique subquery");
+        },
 
-    this.node_unique_subquery = function (row) {
-        return indexAccess(row, "Unique subquery");
-    };
+        node_index_subquery: function (row) {
+            return indexAccess(row, "Index subquery");
+        },
 
-    this.node_index_subquery = function (row) {
-        return indexAccess(row, "Index subquery");
-    };
+        node_index_merge: function (row) {
+            var merge,
+                mergeSpec = row.Extra.match(/Using ((?:intersect|union|sort_union)\(.*?\))(?=;|$)/);
 
-    this.node_index_merge = function (row) {
-        var merge,
-            mergeSpec = row.Extra.match(/Using ((?:intersect|union|sort_union)\(.*?\))(?=;|$)/);
+            merge = recursiveIndexMerge(row, mergeSpec[1], 0)[0];
+            return bookmarkLookup(merge, row);
+        }
 
-        merge = recursiveIndexMerge(row, mergeSpec[1], 0)[0];
-        return bookmarkLookup(merge, row);
-    };
-
-
-}
+    }
+})();
