@@ -26,7 +26,33 @@ queralyzer.createPrimaryType = function (id, table, extra) {
 
 queralyzer.createDerivedType = function (id, table, extra) {
     var row = queralyzer.createPrimaryType(id, table, extra);
-    row.select_type = "DERIVED";
+    row.forEach(function(elem){
+      elem.select_type = "DERIVED";
+    });
+    return row;
+}
+
+queralyzer.createSimpleType = function (id, table, extra) {
+    var row = queralyzer.createPrimaryType(id, table, extra);
+    row.forEach(function(elem){
+        elem.select_type = "SIMPLE";
+    });
+    return row;
+}
+
+queralyzer.createUnionType = function (id, table, extra){
+    var row = queralyzer.createPrimaryType(id, table, extra);
+    row.forEach(function(elem){
+        elem.select_type = "UNION";
+    });
+    return row;
+}
+
+queralyzer.createUnionResultType = function (id, table, extra){
+    var row = queralyzer.createPrimaryType(id, table, extra);
+    row.forEach(function(elem){
+        elem.select_type = "UNION RESULT";
+    });
     return row;
 }
 
