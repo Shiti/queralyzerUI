@@ -98,6 +98,10 @@
                 }).show();
             });
 
+            $.getJSON("data/access_plan_1.json",function(result){
+                var data = queralyzer.ExplainTree.generateTree(result);
+                queralyzer.App.renderTree(data);
+            });
             $.getJSON('data/tableMetaData.json',function(result){
                 $("#tableMetadata").empty();
                 queralyzer.App.addTableMetadata(result);

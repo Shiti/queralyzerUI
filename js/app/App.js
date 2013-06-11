@@ -1,17 +1,19 @@
+/*global queralyzer,d3,$*/
 queralyzer.App = (function () {
 
     "use strict";
     var tableData, indexData;
 
     function tabulate(container, data, columns) {
-
         var table = d3.select(container).append("table")
                 .attr("class", "table table-condensed")
                 .style("table-layout", "fixed"),
-            thead = table.append("thead"),
-            tbody = table.append("tbody").attr("class", "searchable");
+            tableHeader = table.append("thead"),
+            tableBody = table.append("tbody").attr("class", "searchable"),
+            rows,
+            cells;
 
-        thead.append("tr")
+        tableHeader.append("tr")
             .selectAll("th")
             .data(columns)
             .enter()
@@ -20,7 +22,7 @@ queralyzer.App = (function () {
                 return column.charAt(0).toUpperCase() + column.substr(1);
             });
 
-        var rows = tbody.selectAll("tr")
+        rows = tableBody.selectAll("tr")
             .data(data)
             .enter()
             .append("tr")
@@ -28,7 +30,7 @@ queralyzer.App = (function () {
                 return index;
             });
 
-        var cells = rows.selectAll("td")
+        cells = rows.selectAll("td")
             .data(function (row) {
                 return columns.map(function (column) {
                     return {column: column, value: row[column]};
@@ -44,9 +46,9 @@ queralyzer.App = (function () {
 
     return {
         addTableMetadata: function (jsData) {
-            var columns = ["name", "rows", "action"];
+            var columns = ["name", "rows", "action"],
+                data = [];
             tableData = jsData;
-            var data = [];
             $.each(jsData, function (index, d) {
                 var a = {};
                 a.name = d.tableName;
@@ -58,9 +60,9 @@ queralyzer.App = (function () {
         },
 
         addIndexMetadata: function (jsData) {
-            var columns = ["table", "type", "columns", "cardinality", "action"];
+            var columns = ["table", "type", "columns", "cardinality", "action"],
+                data = [];
             indexData = jsData;
-            var data = [];
             jsData.forEach(function (d) {
                 var a = {};
                 a.table = d.tableName;
@@ -86,13 +88,28 @@ queralyzer.App = (function () {
             indexData.cardinality = obj.cardinality;
             indexData.indexColumns = obj.columns;
         },
-        renderTree: function (jsonData) {
+        renderTree: function (data) {
+            var tree = d3.layout.tree();
             d3.select("#treeContainer").selectAll("div")
-                .data(jsonData)
+                .data(tree.nodes(data))
                 .enter()
                 .append("div")
+                .style("margin-left", function (d) {
+                    return (d.depth * 10) + "px";
+                })
+                /*.style("visibility",function(d){
+                 if(d.depth>0){
+                 return "hidden";
+                 }
+                 else return "visible";
+                 })*/
+                .attr("class", function (d) {
+                    if (d.type === "Table scan") {
+                        return "avoidableJoinType";
+                    }
+                })
                 .text(function (d) {
-                    return d.id + " - " + d.Extra;
+                    return d.depth + "-" + d.type;
                 });
         }
     };

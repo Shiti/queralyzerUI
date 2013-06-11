@@ -40,6 +40,15 @@ li.secondary-nav {
     margin-top: 5px;
 }
 
+div#treeContainer{
+    overflow-y: scroll;
+    max-height: 700px;
+}
+
+.avoidableJoinType {
+    background-color: #C67171;
+    font-weight: bold;
+}
 
 @media(min-height: 1200px) {
 
