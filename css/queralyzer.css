@@ -45,9 +45,17 @@ div#treeContainer{
     max-height: 700px;
 }
 
-.avoidableJoinType span{
-    background-color: #faa732;
-    font-weight: bold;
+.icon-warning-sign{
+    font-size: 10px;
+    color: #faa732;
+}
+
+.icon-plus{
+    font-size: 10px;
+}
+
+.icon-minus{
+    font-size: 10px;
 }
 
 @media(min-height: 1200px) {
