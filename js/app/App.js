@@ -44,6 +44,65 @@ queralyzer.App = (function () {
 
     }
 
+    function createTreeLayout(nodes) {
+        $("#treeContainer").empty();
+        d3.select("#treeContainer").selectAll("div")
+            .data(nodes)
+            .enter()
+            .append("div")
+            .style("margin-left", function (d) {
+                return (d.depth * 10) + "px";
+            })
+            .style("display", function (d) {
+                return displayType(d);
+            })
+            .style("word-wrap", "break-word")
+            /*.attr("class", function (d) {
+             var className = "";
+             if (d.type === "Table scan") {
+             className += "avoidableJoinType";
+             return className;
+             }
+             })*/
+            .attr("node", function (d) {
+                return d.nodeId;
+            })
+            .html(function (d) {
+                var icon = "",
+                    content;
+                if (d.isVisible && d.children && d.children[0].isVisible) {
+                    icon = "<i class='icon-minus' ></i>";
+                } else if (d.children) {
+                    icon = "<i class='icon-plus'></i>";
+                }
+
+                if (d.type === "Table scan") {
+                    icon += "<i class='icon-warning-sign'></i>";
+                }
+                content = icon + d.type + ((d.table) ? " " + d.table : "");
+
+                return content;
+            })
+            .on("click", function (d) {
+                if (d.children) {
+                    d.children.forEach(function (elem) {
+                        elem.isVisible = !elem.isVisible;
+                    });
+                }
+                createTreeLayout(nodes);
+            });
+    }
+
+    function displayType(element) {
+        if (element.parent && !element.parent.isVisible) {
+            element.isVisible = false;
+        }
+        if (!element.isVisible) {
+            return "none";
+        }
+        return "block";
+    }
+
     return {
         addTableMetadata: function (jsData) {
             var columns = ["name", "rows", "action"],
@@ -89,28 +148,23 @@ queralyzer.App = (function () {
             indexData.indexColumns = obj.columns;
         },
         renderTree: function (data) {
-            var tree = d3.layout.tree();
-            d3.select("#treeContainer").selectAll("div")
-                .data(tree.nodes(data))
-                .enter()
-                .append("div")
-                .style("margin-left", function (d) {
-                    return (d.depth * 10) + "px";
-                })
-                /*.style("visibility",function(d){
-                 if(d.depth>0){
-                 return "hidden";
-                 }
-                 else return "visible";
-                 })*/
-                .attr("class", function (d) {
-                    if (d.type === "Table scan") {
-                        return "avoidableJoinType";
-                    }
-                })
-                .text(function (d) {
-                    return d.depth + "-" + d.type;
-                });
+            var tree = d3.layout.tree()
+                    .value(function (d, i) {
+                        return i;
+                    }),
+                nodes = tree.nodes(data);
+
+            nodes.forEach(function (elem) {
+                elem.isVisible = true;
+                if (elem.parent) {
+                    elem.nodeId = elem.parent.nodeId + "." + (elem.parent.children.indexOf(elem) + 1);
+                }
+                else {
+                    elem.nodeId = "1";
+                }
+
+            });
+            createTreeLayout(nodes);
         }
     };
 

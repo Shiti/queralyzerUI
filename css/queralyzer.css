@@ -45,8 +45,8 @@ div#treeContainer{
     max-height: 700px;
 }
 
-.avoidableJoinType {
-    background-color: #C67171;
+.avoidableJoinType span{
+    background-color: #faa732;
     font-weight: bold;
 }
 
