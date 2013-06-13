@@ -44,6 +44,40 @@ queralyzer.App = (function () {
 
     }
 
+    function generateHtmlContent(node) {
+        var icon = "",
+            content;
+        if (node.isChildVisible) {
+            icon = "<i class='icon-minus'></i>";
+        } else if (node.children) {
+            icon = "<i class='icon-plus'></i>";
+        }
+        if (node.type === "Table scan") {
+            icon += "<i class='icon-warning-sign'></i>";
+        }
+        content = icon + node.type + ((node.table) ? " " + node.table : "");
+        return content;
+    }
+
+    function click(node) {
+        var parent,
+            children;
+        if (node.children) {
+            parent = $("div[node='" + node.nodeId + "']");
+            children = $("div[node|='" + node.nodeId + "']");
+            node.isChildVisible = !node.isChildVisible;
+
+            if (node.isChildVisible) {
+                children.show();
+                children.find(".icon-plus").removeClass("icon-plus").addClass("icon-minus");
+            } else {
+                children.hide();
+                parent.show();
+                parent.find(".icon-minus").removeClass("icon-minus").addClass("icon-plus");
+            }
+        }
+    }
+
     function createTreeLayout(nodes) {
         $("#treeContainer").empty();
         d3.select("#treeContainer").selectAll("div")
@@ -53,54 +87,16 @@ queralyzer.App = (function () {
             .style("margin-left", function (d) {
                 return (d.depth * 10) + "px";
             })
-            .style("display", function (d) {
-                return displayType(d);
-            })
             .style("word-wrap", "break-word")
-            /*.attr("class", function (d) {
-             var className = "";
-             if (d.type === "Table scan") {
-             className += "avoidableJoinType";
-             return className;
-             }
-             })*/
             .attr("node", function (d) {
                 return d.nodeId;
             })
             .html(function (d) {
-                var icon = "",
-                    content;
-                if (d.isVisible && d.children && d.children[0].isVisible) {
-                    icon = "<i class='icon-minus' ></i>";
-                } else if (d.children) {
-                    icon = "<i class='icon-plus'></i>";
-                }
-
-                if (d.type === "Table scan") {
-                    icon += "<i class='icon-warning-sign'></i>";
-                }
-                content = icon + d.type + ((d.table) ? " " + d.table : "");
-
-                return content;
+                return generateHtmlContent(d);
             })
             .on("click", function (d) {
-                if (d.children) {
-                    d.children.forEach(function (elem) {
-                        elem.isVisible = !elem.isVisible;
-                    });
-                }
-                createTreeLayout(nodes);
+                click(d);
             });
-    }
-
-    function displayType(element) {
-        if (element.parent && !element.parent.isVisible) {
-            element.isVisible = false;
-        }
-        if (!element.isVisible) {
-            return "none";
-        }
-        return "block";
     }
 
     return {
@@ -155,11 +151,12 @@ queralyzer.App = (function () {
                 nodes = tree.nodes(data);
 
             nodes.forEach(function (elem) {
-                elem.isVisible = true;
-                if (elem.parent) {
-                    elem.nodeId = elem.parent.nodeId + "." + (elem.parent.children.indexOf(elem) + 1);
+                if (elem.children) {
+                    elem.isChildVisible = true;
                 }
-                else {
+                if (elem.parent) {
+                    elem.nodeId = elem.parent.nodeId + "-" + (elem.parent.children.indexOf(elem) + 1);
+                } else {
                     elem.nodeId = "1";
                 }
 
