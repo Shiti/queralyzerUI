@@ -8,7 +8,7 @@
         "ref": "NULL",
         "rows": "20000",
         "select_type": "PRIMARY",
-        "table": "",
+        "table": "<derived2>",
         "type": "ALL"
     },
     {
@@ -44,7 +44,7 @@
         "ref": "NULL",
         "rows": "NULL",
         "select_type": "UNION RESULT",
-        "table": "",
+        "table": "<union2,3>",
         "type": "ALL"
     },
     {
@@ -56,7 +56,7 @@
         "ref": "NULL",
         "rows": "20000",
         "select_type": "UNION",
-        "table": "",
+        "table": "<derived5>",
         "type": "ALL"
     },
     {
@@ -92,7 +92,7 @@
         "ref": "NULL",
         "rows": "NULL",
         "select_type": "UNION RESULT",
-        "table": "",
+        "table": "<union5,6>",
         "type": "ALL"
     },
     {
@@ -104,7 +104,7 @@
         "ref": "NULL",
         "rows": "NULL",
         "select_type": "UNION RESULT",
-        "table": "",
+        "table": "<union1,4>",
         "type": "ALL"
     }
 ]
