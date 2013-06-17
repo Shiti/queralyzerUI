@@ -76,7 +76,7 @@ queralyzer.ExplainTree = (function () {
 
     function transformRowToNode(row) {
         var sub = row.type,
-            childNode,
+            node,
             warn,
             funcName,
             extra,
@@ -89,14 +89,14 @@ queralyzer.ExplainTree = (function () {
         funcName = "node_" + sub;
 
         extra = row.Extra;
-        childNode = sub
+        node = sub
             ? queralyzer.TypeFactory[funcName](row) : extra.match(/No tables/)
             ? { type: (!row.select_type.match(/^(?:PRIMARY|SIMPLE)$/) ? row.select_type : 'DUAL') }
             : extra.match(new RegExp("(?:" + noMatchingRow + ")", "i"))
             ? { type: 'IMPOSSIBLE' } : extra.match(/optimized away/)
             ? { type: 'CONSTANT' } : false;
 
-        if (!childNode) {
+        if (!node) {
             return;
         }
 
@@ -105,7 +105,7 @@ queralyzer.ExplainTree = (function () {
         if (warn) {
             parentNode.warning = warn;
         } else {
-            parentNode = childNode;
+            parentNode = node;
             if (extra.match(/Using where/)) {
                 parentNode.type = "Filter with WHERE";
             } else if (extra.match(/Using join buffer/)) {
@@ -116,9 +116,9 @@ queralyzer.ExplainTree = (function () {
                 /* Skipping possible keys for now*/
                 parentNode.type = 'Re-evaluate indexes each row';
             } else if (extra.match(/Using filesort/)) {
-                parentNode = filesort(childNode);
+                parentNode = filesort(node);
             } else if (extra.match(/Using temporary/)) {
-                parentNode = temporary(childNode, row.table, 1);
+                parentNode = temporary(node, row.table, 1);
             }
         }
 
@@ -205,7 +205,7 @@ queralyzer.ExplainTree = (function () {
     function buildQueryPlan(rows) {
         var enclosingScope,
             existingTree = {},
-            newTree = {},
+            newTree,
             first,
             isTempFilesort = false,
             firstExtra,
@@ -274,7 +274,7 @@ queralyzer.ExplainTree = (function () {
         var newId;
         rows.forEach(function (row, index) {
             row.rowId = index;
-            row.Extra = (row.Extra!=="NULL")?row.Extra : "";
+            row.Extra = (row.Extra !== "NULL") ? row.Extra : "";
 
             if (row.table && !row.table.match(/\./)) {
                 if (row.id === "NULL" && row.table.match(/^<union(\d+)/)) {

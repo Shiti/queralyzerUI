@@ -46,7 +46,7 @@ queralyzer.App = (function () {
 
     function generateHtmlContent(node) {
         var icon = "",
-            content;
+            content = "<a class='leaves'>";
         if (node.isChildVisible) {
             icon = "<i class='icon-minus'></i>";
         } else if (node.children) {
@@ -55,7 +55,7 @@ queralyzer.App = (function () {
         if (node.type === "Table scan") {
             icon += "<i class='icon-warning-sign'></i>";
         }
-        content = icon + node.type + ((node.table) ? " " + node.table : "");
+        content += icon + node.type + ((node.table) ? " " + node.table : "") + "</a>";
         return content;
     }
 
