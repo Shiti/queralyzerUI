@@ -6,8 +6,7 @@ describe("QueralyzerSpec", function () {
         data.add(queralyzer.createPrimaryType("1", "user"));
         result = queralyzer.ExplainTree.generateTree(data.value());
         expect(result).toBeDefined();
-        expect(result.children[0].type).toBe("Table scan");
-        expect(result.children[0].children[0].table).toBe("user");
+        expect(result.children[0].type).toBe("Table");
     });
 
     it("works where table name is not given", function () {
@@ -32,9 +31,7 @@ describe("QueralyzerSpec", function () {
         result = queralyzer.ExplainTree.generateTree(data.value());
         expect(result).toBeDefined();
         expect(result.type).toBe("JOIN");
-        expect(result.children[0].id).toBe("1");
-        expect(result.children[1].children[0].type).toBe("Table scan");
-        expect(result.children[0].children[0].children[0].type).toBe("DERIVED");
+        expect(result.children[1].children[0].type).toBe("DERIVED");
     });
 
     it("works for union query", function () {
