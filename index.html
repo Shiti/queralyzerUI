@@ -76,7 +76,7 @@
 
                 $.post('/query', data, function (result) {
                             $("#treeContainer").empty();
-                            queralyzer.App.renderTree(queralyzer.ExplainTree(result));
+                            queralyzer.App.renderTree(queralyzer.ExplainTree.generateTree(result));
                         },
                         'json'
                 );
