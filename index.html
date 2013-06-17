@@ -76,7 +76,7 @@
 
                 $.post('/query', data, function (result) {
                             $("#treeContainer").empty();
-                            queralyzer.renderTree(result);
+                            queralyzer.App.renderTree(result);
                         },
                         'json'
                 );
@@ -84,12 +84,12 @@
                     $("#tableMetadata").empty();
 			        queralyzer.App.addTableMetadata(result);
                 });
-            });
-	/*	$.getJSON('/indexmetadata',function(result){
-                    $("#tableMetadata").empty();
-                        queralyzer.App.addIndexMetadata(result);
-            });*/
 
+                $.getJSON('/indexmetadata',function(result){
+                    $("#tableMetadata").empty();
+                    queralyzer.App.addIndexMetadata(result);
+                });
+            });
 
             $('input#filter').on('keyup', function () {
                 var rex = new RegExp($(this).val(), 'i');
@@ -97,20 +97,6 @@
                 $('.searchable tr').filter(function () {
                    return rex.test($(this).text());
                 }).show();
-            });
-
-            $.getJSON("data/access_plan_1.json",function(result){
-                var data = queralyzer.ExplainTree.generateTree(result);
-                queralyzer.App.renderTree(data);
-            });
-            $.getJSON('data/tableMetaData.json',function(result){
-                $("#tableMetadata").empty();
-                queralyzer.App.addTableMetadata(result);
-            });
-
-            $.getJSON('data/indexMetaData.json',function(result){
-                $("#indexMetadata").empty();
-                queralyzer.App.addIndexMetadata(result);
             });
 
         });
