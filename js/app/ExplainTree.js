@@ -65,10 +65,12 @@ queralyzer.ExplainTree = (function () {
             finalNode = {
                 type: "Table scan",
                 rows: undefined,
-                children: [ node ]
+                children: [node]
             };
+        } else {
+            finalNode = node;
         }
-        else finalNode = node;
+
         return finalNode;
     }
 
@@ -103,7 +105,7 @@ queralyzer.ExplainTree = (function () {
         if (warn) {
             parentNode.warning = warn;
         } else {
-            parentNode.children = [childNode];
+            parentNode = childNode;
             if (extra.match(/Using where/)) {
                 parentNode.type = "Filter with WHERE";
             } else if (extra.match(/Using join buffer/)) {
@@ -244,7 +246,7 @@ queralyzer.ExplainTree = (function () {
         scope = first.id;
         existingTree = transformRowToNode(first);
 
-        newTree.children = [existingTree];
+        newTree = existingTree;
         while (i < rows.length) {
             r = rows[i];
             if (r.id === scope) {
@@ -272,7 +274,7 @@ queralyzer.ExplainTree = (function () {
         var newId;
         rows.forEach(function (row, index) {
             row.rowId = index;
-            row.Extra = row.Extra || "";
+            row.Extra = (row.Extra!=="NULL")?row.Extra : "";
 
             if (row.table && !row.table.match(/\./)) {
                 if (row.id === "NULL" && row.table.match(/^<union(\d+)/)) {
