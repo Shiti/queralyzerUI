@@ -46,7 +46,8 @@ queralyzer.App = (function () {
 
     function generateHtmlContent(node) {
         var icon = "",
-            content = "<a class='leaves'>";
+            content = "<a class='leaves'>",
+            label = node.type + ((node.table) ? " " + node.table : "");
         if (node.isChildVisible) {
             icon = "<i class='icon-minus'></i>";
         } else if (node.children) {
@@ -55,7 +56,10 @@ queralyzer.App = (function () {
         if (node.type === "Table scan") {
             icon += "<i class='icon-warning-sign'></i>";
         }
-        content += icon + node.type + ((node.table) ? " " + node.table : "") + "</a>";
+        if (node.type === "Filter with WHERE") {
+            label = "Filter on " + node.children[0].table;
+        }
+        content += icon + label + "</a>";
         return content;
     }
 
@@ -76,6 +80,32 @@ queralyzer.App = (function () {
                 parent.find(".icon-minus").removeClass("icon-minus").addClass("icon-plus");
             }
         }
+    }
+
+    function update(node) {
+        if (node.type === "DERIVED" && node.children[0].type === "Filesort" && node.children[0].children[0].type === "TEMPORARY") {
+            node.children = node.children[0].children[0].children;
+        }
+        return node;
+    }
+
+    function prettyPrint(tree) {
+        var childNodes = [];
+        if (tree.children) {
+            if (tree.type === "JOIN") {
+                tree.children.forEach(function (child) {
+                    childNodes.push(update(child));
+                });
+                tree.children = childNodes;
+            }
+            childNodes = [];
+            tree.children.forEach(function (child) {
+                childNodes.push(prettyPrint(child));
+            });
+            tree.children = childNodes;
+            return tree;
+        }
+        return tree;
     }
 
     function createTreeLayout(nodes) {
@@ -144,6 +174,10 @@ queralyzer.App = (function () {
             indexData.indexColumns = obj.columns;
         },
         renderTree: function (data) {
+
+            var cleanedTree = prettyPrint(data);
+            console.log(cleanedTree);
+
             var tree = d3.layout.tree()
                     .value(function (d, i) {
                         return i;
