@@ -61,9 +61,12 @@ div#treeContainer {
 }
 
 a.leaves {
-    cursor: pointer;
     text-decoration: none;
     color: black;
+}
+
+a.collapsible {
+    cursor: pointer;
 }
 
 @media (min-height: 1200px) {

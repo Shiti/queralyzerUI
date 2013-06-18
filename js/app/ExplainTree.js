@@ -8,10 +8,11 @@ queralyzer.ExplainTree = (function () {
             row;
         for (r = 0; r < arr.length; r++) {
             row = arr[r];
-            if (row.id && row.id === id) {
+            if (row.id && row.id !== id) {
+                i += 1;
+            } else {
                 break;
             }
-            i += 1;
         }
         return i;
     }
@@ -105,19 +106,39 @@ queralyzer.ExplainTree = (function () {
         if (warn) {
             parentNode.warning = warn;
         } else {
-            parentNode = node;
+//            parentNode = node;
             if (extra.match(/Using where/)) {
                 parentNode.type = "Filter with WHERE";
-            } else if (extra.match(/Using join buffer/)) {
-                parentNode.type = "Join buffer";
-            } else if (extra.match(/Distinct|Not exists/)) {
-                parentNode.type = "Distinct/Not-Exists";
-            } else if (extra.match(/Range checked for each record \(\w+ map: ([^\)]+)\)/)) {
+                parentNode.children = [node];
+                node = parentNode;
+            }
+            if (extra.match(/Using join buffer/)) {
+                parentNode = {
+                    type: "Join buffer",
+                    children: [parentNode]
+                };
+                node = parentNode;
+            }
+            if (extra.match(/Distinct|Not exists/)) {
+                parentNode = {
+                    type: "Distinct/Not-Exists",
+                    children: [node]
+                };
+                node = parentNode;
+            }
+            if (extra.match(/Range checked for each record \(\w+ map: ([^\)]+)\)/)) {
                 /* Skipping possible keys for now*/
                 parentNode.type = 'Re-evaluate indexes each row';
-            } else if (extra.match(/Using filesort/)) {
+                parentNode = {
+                    type: "Distinct/Not-Exists",
+                    children: [node]
+                };
+                node = parentNode;
+            }
+            if (extra.match(/Using filesort/)) {
                 parentNode = filesort(node);
-            } else if (extra.match(/Using temporary/)) {
+            }
+            if (extra.match(/Using temporary/)) {
                 parentNode = temporary(node, row.table, 1);
             }
         }
