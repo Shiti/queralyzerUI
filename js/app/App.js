@@ -2,7 +2,9 @@
 queralyzer.App = (function () {
 
     "use strict";
-    var tableData, indexData;
+    var tableData,
+        indexData,
+        treeDetails = {};
 
     function tabulate(container, data, columns) {
         var table = d3.select(container).append("table")
@@ -46,18 +48,20 @@ queralyzer.App = (function () {
 
     function generateHtmlContent(node) {
         var icon = "",
-            content = "<a class='leaves'>",
+            className = "leaves ",
+            content,
             label = node.type + ((node.table) ? " " + node.table : "");
-        if (node.isChildVisible) {
-            icon = "<i class='icon-minus'></i>";
-        } else if (node.children) {
+
+        if (node.children && node.children.length > 0) {
+            className += "collapsible";
             icon = "<i class='icon-plus'></i>";
         }
+        if (node.isChildVisible) {
+            icon = "<i class='icon-minus'></i>";
+        }
+        content = "<a class='" + className + "'>";
         if (node.type === "Table scan") {
             icon += "<i class='icon-warning-sign'></i>";
-        }
-        if (node.type === "Filter with WHERE") {
-            label = "Filter on " + node.children[0].table;
         }
         content += icon + label + "</a>";
         return content;
@@ -66,7 +70,7 @@ queralyzer.App = (function () {
     function click(node) {
         var parent,
             children;
-        if (node.children) {
+        if (node.children && node.children.length > 0) {
             parent = $("div[node='" + node.nodeId + "']");
             children = $("div[node|='" + node.nodeId + "']");
             node.isChildVisible = !node.isChildVisible;
@@ -83,8 +87,19 @@ queralyzer.App = (function () {
     }
 
     function update(node) {
-        if (node.type === "DERIVED" && node.children[0].type === "Filesort" && node.children[0].children[0].type === "TEMPORARY") {
-            node.children = node.children[0].children[0].children;
+        var child, grandChild,
+            tableNames;
+        if (node.type === "DERIVED") {
+            child = node.children[0];
+            grandChild = child.children[0];
+            if (child.type === "Filesort" && grandChild.type === "TEMPORARY") {
+                node.children = grandChild.children;
+                tableNames = queralyzer.customMatch(grandChild.table, /temporary(\([a-z0-9,]+\))/);
+                node.title = "d(fs(t" + tableNames + "))";
+            }
+        } else if (node.type === "Bookmark lookup") {
+            child = node.children[1];
+            node.children[1] = update(child);
         }
         return node;
     }
@@ -98,6 +113,12 @@ queralyzer.App = (function () {
                 });
                 tree.children = childNodes;
             }
+            if (tree.type === "Filter with WHERE") {
+                tree.type = "Filter on";
+                tree.table = tree.children[0].table;
+                tree.children = [];
+            }
+
             childNodes = [];
             tree.children.forEach(function (child) {
                 childNodes.push(prettyPrint(child));
@@ -106,6 +127,23 @@ queralyzer.App = (function () {
             return tree;
         }
         return tree;
+    }
+
+    function analyze(tree) {
+        if (tree.type === "DERIVED") {
+            treeDetails.derived += 1;
+        }
+        if (tree.type === "Filesort") {
+            treeDetails.fileSort += 1;
+        }
+        if (tree.type === "Table scan") {
+            treeDetails.tableScan += 1;
+        }
+        if (tree.children) {
+            tree.children.forEach(function (child) {
+                analyze(child);
+            });
+        }
     }
 
     function createTreeLayout(nodes) {
@@ -120,6 +158,9 @@ queralyzer.App = (function () {
             .style("word-wrap", "break-word")
             .attr("node", function (d) {
                 return d.nodeId;
+            })
+            .attr("title", function (d) {
+                return d.title;
             })
             .html(function (d) {
                 return generateHtmlContent(d);
@@ -174,9 +215,11 @@ queralyzer.App = (function () {
             indexData.indexColumns = obj.columns;
         },
         renderTree: function (data) {
+            treeDetails = {derived: 0, tableScan: 0, fileSort: 0};
 
-            var cleanedTree = prettyPrint(data);
-            console.log(cleanedTree);
+            analyze(data);
+
+//            prettyPrint(data);
 
             var tree = d3.layout.tree()
                     .value(function (d, i) {
@@ -185,7 +228,7 @@ queralyzer.App = (function () {
                 nodes = tree.nodes(data);
 
             nodes.forEach(function (elem) {
-                if (elem.children) {
+                if (elem.children && elem.children.length > 0) {
                     elem.isChildVisible = true;
                 }
                 if (elem.parent) {
