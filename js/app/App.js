@@ -50,7 +50,9 @@ queralyzer.App = (function () {
         var icon = "",
             className = "leaves ",
             content,
-            label = node.type + ((node.table) ? " " + node.table : "");
+            label = (node.id || "") + " " +
+                node.type[0] + node.type.toLowerCase().substring(1) +
+                ((node.table) ? " " + node.table : "");
 
         if (node.children && node.children.length > 0) {
             className += "collapsible";
@@ -86,44 +88,67 @@ queralyzer.App = (function () {
         }
     }
 
-    function update(node) {
-        var child, grandChild,
-            tableNames;
-        if (node.type === "DERIVED") {
+    function removeExtraNodes(tree) {
+        if (tree.children) {
+            if (tree.children.length > 1) {
+                return tree;
+            }
+            return removeExtraNodes(tree.children[0]);
+        }
+        return tree;
+    }
+
+    function updateFilterNode(node) {
+        var child,
+            grandChild;
+
+        if (node.type === "Filter with WHERE") {
             child = node.children[0];
-            grandChild = child.children[0];
-            if (child.type === "Filesort" && grandChild.type === "TEMPORARY") {
-                node.children = grandChild.children;
-                tableNames = queralyzer.customMatch(grandChild.table, /temporary(\([a-z0-9,]+\))/);
-                node.title = "d(fs(t" + tableNames + "))";
+            grandChild = node.children[0].children[0];
+            if (child.type === "Table scan" && grandChild.type === "Table") {
+                node.type = "Filter on";
+                node.table = grandChild.table;
+                node.title = "Using WHERE";
+                node.children = [];
             }
         } else if (node.type === "Bookmark lookup") {
-            child = node.children[1];
-            node.children[1] = update(child);
+            node = node.children[1];
         }
         return node;
     }
 
     function prettyPrint(tree) {
-        var childNodes = [];
+        var childNodes = [],
+            child;
+
         if (tree.children) {
-            if (tree.type === "JOIN") {
-                tree.children.forEach(function (child) {
-                    childNodes.push(update(child));
-                });
-                tree.children = childNodes;
-            }
-            if (tree.type === "Filter with WHERE") {
-                tree.type = "Filter on";
-                tree.table = tree.children[0].table;
-                tree.children = [];
+
+            tree.children.forEach(function (child) {
+                if (child.type === "Bookmark lookup") {
+                    tree.type += " using bookmark lookup";
+                }
+                childNodes.push(updateFilterNode(child));
+            });
+            tree.children = childNodes;
+
+
+            if (tree.type === "Join buffer") {
+                child = tree.children[0];
+                if (child.type === "Filter on") {
+                    tree = child;
+                }
             }
 
             childNodes = [];
             tree.children.forEach(function (child) {
                 childNodes.push(prettyPrint(child));
             });
+
             tree.children = childNodes;
+
+            if (tree.children.length === 1) {
+                tree = removeExtraNodes(tree);
+            }
             return tree;
         }
         return tree;
@@ -215,17 +240,20 @@ queralyzer.App = (function () {
             indexData.indexColumns = obj.columns;
         },
         renderTree: function (data) {
+
             treeDetails = {derived: 0, tableScan: 0, fileSort: 0};
 
             analyze(data);
+            console.log(treeDetails);
 
-//            prettyPrint(data);
+            var cleanData = removeExtraNodes(data);
+            prettyPrint(cleanData);
 
             var tree = d3.layout.tree()
                     .value(function (d, i) {
                         return i;
                     }),
-                nodes = tree.nodes(data);
+                nodes = tree.nodes(cleanData);
 
             nodes.forEach(function (elem) {
                 if (elem.children && elem.children.length > 0) {

@@ -3,9 +3,6 @@
 <head>
     <title>Queralyzer</title>
 
-    <!--<meta name="viewport" content="width=device-width, initial-scale=1.0">-->
-    <!--<link rel="stylesheet" href="/bootstrap/css/bootstrap-responsive.min.css">-->
-
     <link href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/css/bootstrap-combined.no-icons.min.css" rel="stylesheet">
     <link href="//netdna.bootstrapcdn.com/font-awesome/3.1.1/css/font-awesome.css" rel="stylesheet">
     <link rel="stylesheet" href="css/queralyzer.css">
@@ -67,7 +64,7 @@
                 }
             });
 
-            $("#userQuery").attr("rows", 15);
+            $("#userQuery").attr("rows", 24);
             $("#userQuery").linedtextarea();
 
             $('#submitButton').click(function (e) {
@@ -91,6 +88,12 @@
                 });
             });
 
+            $('#userQuery').keydown(function(e){
+               if(e.keyCode===13){
+                   //TODO Add code to post data
+               }
+            });
+
             $('input#filter').on('keyup', function () {
                 var rex = new RegExp($(this).val(), 'i');
                 $('.searchable tr').hide();
@@ -99,7 +102,7 @@
                 }).show();
             });
 
-            /*$.getJSON("data/access_plan_1.json",function(result){
+           /* $.getJSON("data/access_plan_5.json",function(result){
                 var data = queralyzer.ExplainTree.generateTree(result);
                 queralyzer.App.renderTree(data);
             });
@@ -118,7 +121,10 @@
 </head>
 <body>
 <header>
-    <div class='headerWrapper'><a class='logo' href='index.html'></a></div>
+    <div class="headerWrapper">
+        <img src="img/pramati.png" style="height:24px;float:left;">
+        <a class="logo" href="index.html"></a>
+    </div>
 </header>
 <div class="container-fluid">
     <div class="row-fluid" style="margin:1.6%;width: 98%;">
