@@ -1,26 +1,26 @@
 [
     {
-        "Extra": "Using where; Using temporary; Using filesort",
+        "Extra": "Using where; Using filesort",
         "id": "1",
         "key": "NULL",
         "key_len": "NULL",
         "possible_keys": "NULL",
         "ref": "NULL",
-        "rows": "1000000000",
+        "rows": "4",
         "select_type": "PRIMARY",
-        "table": "<derived5>",
+        "table": "<derived2>",
         "type": "ALL"
     },
     {
         "Extra": "NULL",
         "id": "1",
         "key": "<auto_key0>",
-        "key_len": "5",
+        "key_len": "NULL",
         "possible_keys": "<auto_key0>",
-        "ref": "guests_exposed.id",
-        "rows": "10000",
+        "ref": "booking_count.id",
+        "rows": "2",
         "select_type": "PRIMARY",
-        "table": "<derived2>",
+        "table": "<derived5>",
         "type": "ref"
     },
     {

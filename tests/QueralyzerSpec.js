@@ -17,7 +17,7 @@ describe("QueralyzerSpec", function () {
         result = queralyzer.ExplainTree.generateTree(data.value());
         expect(result).toBeDefined();
         expect(result.type).toBe("DERIVED");
-        expect(result.children[1].type).toBe("Filter with WHERE");
+        expect(result.children[1].type).toBe("Filesort");
     });
 
     it("works for derived query", function () {

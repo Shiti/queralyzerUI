@@ -75,6 +75,10 @@ queralyzer.ExplainTree = (function () {
         return finalNode;
     }
 
+    function createNode(type, children) {
+        return {type: type, children: [children]};
+    }
+
     function transformRowToNode(row) {
         var sub = row.type,
             node,
@@ -106,33 +110,22 @@ queralyzer.ExplainTree = (function () {
         if (warn) {
             parentNode.warning = warn;
         } else {
-//            parentNode = node;
+            parentNode = node;
             if (extra.match(/Using where/)) {
-                parentNode.type = "Filter with WHERE";
-                parentNode.children = [node];
+                parentNode = createNode("Filter with WHERE", node);
                 node = parentNode;
             }
             if (extra.match(/Using join buffer/)) {
-                parentNode = {
-                    type: "Join buffer",
-                    children: [parentNode]
-                };
+                parentNode = createNode("Join buffer", node);
                 node = parentNode;
             }
             if (extra.match(/Distinct|Not exists/)) {
-                parentNode = {
-                    type: "Distinct/Not-Exists",
-                    children: [node]
-                };
+                parentNode = createNode("Distinct/Not-Exists", node);
                 node = parentNode;
             }
             if (extra.match(/Range checked for each record \(\w+ map: ([^\)]+)\)/)) {
                 /* Skipping possible keys for now*/
-                parentNode.type = 'Re-evaluate indexes each row';
-                parentNode = {
-                    type: "Distinct/Not-Exists",
-                    children: [node]
-                };
+                parentNode = createNode("Re-evaluate indexes each row", node);
                 node = parentNode;
             }
             if (extra.match(/Using filesort/)) {
