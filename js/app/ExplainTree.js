@@ -66,7 +66,7 @@ queralyzer.ExplainTree = (function () {
             finalNode = {
                 type: "Table scan",
                 rows: undefined,
-                children: [node]
+                children: [childNode]
             };
         } else {
             finalNode = node;
@@ -109,31 +109,30 @@ queralyzer.ExplainTree = (function () {
 
         if (warn) {
             parentNode.warning = warn;
-        } else {
-            parentNode = node;
-            if (extra.match(/Using where/)) {
-                parentNode = createNode("Filter with WHERE", node);
-                node = parentNode;
-            }
-            if (extra.match(/Using join buffer/)) {
-                parentNode = createNode("Join buffer", node);
-                node = parentNode;
-            }
-            if (extra.match(/Distinct|Not exists/)) {
-                parentNode = createNode("Distinct/Not-Exists", node);
-                node = parentNode;
-            }
-            if (extra.match(/Range checked for each record \(\w+ map: ([^\)]+)\)/)) {
-                /* Skipping possible keys for now*/
-                parentNode = createNode("Re-evaluate indexes each row", node);
-                node = parentNode;
-            }
-            if (extra.match(/Using filesort/)) {
-                parentNode = filesort(node);
-            }
-            if (extra.match(/Using temporary/)) {
-                parentNode = temporary(node, row.table, 1);
-            }
+        }
+        parentNode = node;
+        if (extra.match(/Using where/)) {
+            parentNode = createNode("Filter with WHERE", node);
+            node = parentNode;
+        }
+        if (extra.match(/Using join buffer/)) {
+            parentNode = createNode("Join buffer", node);
+            node = parentNode;
+        }
+        if (extra.match(/Distinct|Not exists/)) {
+            parentNode = createNode("Distinct/Not-Exists", node);
+            node = parentNode;
+        }
+        if (extra.match(/Range checked for each record \(\w+ map: ([^\)]+)\)/)) {
+            /* Skipping possible keys for now*/
+            parentNode = createNode("Re-evaluate indexes each row", node);
+            node = parentNode;
+        }
+        if (extra.match(/Using filesort/)) {
+            parentNode = filesort(node);
+        }
+        if (extra.match(/Using temporary/)) {
+            parentNode = temporary(node, row.table, 1);
         }
 
         parentNode.id = row.id;
