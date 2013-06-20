@@ -3,7 +3,8 @@
 <head>
     <title>Queralyzer</title>
 
-    <link href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/css/bootstrap-combined.no-icons.min.css" rel="stylesheet">
+    <link href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/css/bootstrap-combined.no-icons.min.css"
+          rel="stylesheet">
     <link href="//netdna.bootstrapcdn.com/font-awesome/3.1.1/css/font-awesome.css" rel="stylesheet">
     <link rel="stylesheet" href="css/queralyzer.css">
     <link rel="stylesheet" href="css/jquery-linedtextarea.css">
@@ -49,17 +50,17 @@
                     row.find("div").each(function (index, elem) {
                         var element = $(elem);
                         if (!element.hasClass("action")) {
-                            newData[element.attr("class")]= element.text();
+                            newData[element.attr("class")] = element.text();
                             element.attr("contenteditable", false);
                         }
                     });
                     var id = tableContainer.attr("id");
 
-                    if(id==="tableMetadata"){
-                        queralyzer.App.updateTableMetaData(rowId,newData)
+                    if (id === "tableMetadata") {
+                        queralyzer.App.updateTableMetaData(rowId, newData)
                     }
-                    else{
-                        queralyzer.App.updateIndexMetaData(rowId,newData)
+                    else {
+                        queralyzer.App.updateIndexMetaData(rowId, newData)
                     }
                 }
             });
@@ -69,50 +70,33 @@
 
             $('#submitButton').click(function (e) {
                 e.preventDefault();
-                var data = $('form#queryForm').serialize();
-
-                $.post('/query', data, function (result) {
-                            $("#treeContainer").empty();
-                            queralyzer.App.renderTree(queralyzer.ExplainTree.generateTree(result));
-                        },
-                        'json'
-                );
-                $.getJSON('/tablemetadata',function(result){
-                    $("#tableMetadata").empty();
-			        queralyzer.App.addTableMetadata(result);
-                });
-
-                $.getJSON('/indexmetadata',function(result){
-                    $("#tableMetadata").empty();
-                    queralyzer.App.addIndexMetadata(result);
-                });
+                queralyzer.App.submitQuery();
             });
 
-            $('#userQuery').keydown(function(e){
-               if(e.keyCode===13){
-                   //TODO Add code to post data
-               }
+            $('#userQuery').keydown(function (e) {
+                if (e.keyCode === 13) {
+                    queralyzer.App.submitQuery();
+                }
             });
 
             $('input#filter').on('keyup', function () {
                 var rex = new RegExp($(this).val(), 'i');
                 $('.searchable tr').hide();
                 $('.searchable tr').filter(function () {
-                   return rex.test($(this).text());
+                    return rex.test($(this).text());
                 }).show();
             });
 
-           /* $.getJSON("data/access_plan_5.json",function(result){
-                var data = queralyzer.ExplainTree.generateTree(result);
-                queralyzer.App.renderTree(data);
+           /* $.getJSON("data/access_plan_5.json", function (result) {
+                queralyzer.App.renderTree(result);
+                queralyzer.App.renderRows();
             });
-            $.getJSON('data/tableMetaData.json',function(result){
-                $("#tableMetadata").empty();
+
+            $.getJSON('data/tableMetaData.json', function (result) {
                 queralyzer.App.addTableMetadata(result);
             });
 
-            $.getJSON('data/indexMetaData.json',function(result){
-                $("#indexMetadata").empty();
+            $.getJSON('data/indexMetaData.json', function (result) {
                 queralyzer.App.addIndexMetadata(result);
             });*/
 
@@ -145,7 +129,7 @@
                 <div class="tabbable">
                     <ul class="nav nav-tabs">
                         <li class="active"><a href="#tableMetadata" data-toggle="tab">Tables</a></li>
-                        <li><a href="##indexMetadata" data-toggle="tab">Indexes</a></li>
+                        <li><a href="#indexMetadata" data-toggle="tab">Indexes</a></li>
                         <li class="pull-right" style="margin-right: 5px;"><input type="text" id="filter">&nbsp;<i
                                 class="icon-search"></i></li>
                     </ul>
@@ -160,8 +144,18 @@
         </div>
         <div class="span7" style="margin-left: 0.5%;">
             <div id="result" class="boxed tree">
-                <legend> Tree</legend>
-                <div id="treeContainer"></div>
+                <div class="tabbable">
+                    <ul class="nav nav-tabs">
+                        <li class="active"><a href="#treeContainer" data-toggle="tab">Access Plan</a></li>
+                        <li><a href="#rowContainer" data-toggle="tab">Explain Rows</a></li>
+                    </ul>
+                    <div class="tab-content">
+                        <div class="tab-pane active result" id="treeContainer">
+                        </div>
+                        <div class="tab-pane result" id="rowContainer">
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

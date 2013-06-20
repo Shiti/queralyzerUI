@@ -40,9 +40,13 @@ li.secondary-nav {
     margin-top: 5px;
 }
 
-div#treeContainer {
+div.result {
     overflow-y: scroll;
     max-height: 700px;
+}
+
+#rowContainer{
+    font-size: 10px;
 }
 
 .icon-warning-sign {

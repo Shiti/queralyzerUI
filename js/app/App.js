@@ -4,11 +4,14 @@ queralyzer.App = (function () {
     "use strict";
     var tableData,
         indexData,
+        actualJsonData,
         treeDetails = {};
 
     function tabulate(container, data, columns) {
+        $(container).empty();
+
         var table = d3.select(container).append("table")
-                .attr("class", "table table-condensed")
+                .attr("class", "table table-condensed table-fixed-header")
                 .style("table-layout", "fixed"),
             tableHeader = table.append("thead"),
             tableBody = table.append("tbody").attr("class", "searchable"),
@@ -149,6 +152,8 @@ queralyzer.App = (function () {
             if (tree.children.length === 1) {
                 tree = removeExtraNodes(tree);
             }
+            //TODO change it from tooltip to a details thing
+            tree.title = tree.title || JSON.stringify(actualJsonData[tree.rowId]);
             return tree;
         }
         return tree;
@@ -240,20 +245,26 @@ queralyzer.App = (function () {
             indexData.indexColumns = obj.columns;
         },
         renderTree: function (data) {
+            var tree,
+                cleanTree,
+                treeFunction,
+                nodes;
 
+            actualJsonData = JSON.parse(JSON.stringify(data));
+            tree = queralyzer.ExplainTree.generateTree(data);
             treeDetails = {derived: 0, tableScan: 0, fileSort: 0};
 
-            analyze(data);
-            console.log(treeDetails);
+            /*analyze(data);
+             console.log(treeDetails);*/
 
-            var cleanData = removeExtraNodes(data);
-            prettyPrint(cleanData);
+            cleanTree = removeExtraNodes(tree);
+            prettyPrint(cleanTree);
 
-            var tree = d3.layout.tree()
-                    .value(function (d, i) {
-                        return i;
-                    }),
-                nodes = tree.nodes(cleanData);
+            treeFunction = d3.layout.tree()
+                .value(function (d, i) {
+                    return i;
+                });
+            nodes = treeFunction.nodes(cleanTree);
 
             nodes.forEach(function (elem) {
                 if (elem.children && elem.children.length > 0) {
@@ -267,6 +278,26 @@ queralyzer.App = (function () {
 
             });
             createTreeLayout(nodes);
+        },
+        renderRows: function () {
+            var columns = ["id", "key", "key_len", "possible_keys", "ref", "rows",
+                "select_type", "table", "type", "Extra"];
+            tabulate("#rowContainer", actualJsonData,columns);
+        },
+        submitQuery: function () {
+            var data = $('form#queryForm').serialize();
+
+            $.post('/query', data, function (result) {
+                queralyzer.App.renderTree(result);
+            }, 'json');
+
+            $.getJSON('/tablemetadata', function (result) {
+                queralyzer.App.addTableMetadata(result);
+            });
+
+            $.getJSON('/indexmetadata', function (result) {
+                queralyzer.App.addIndexMetadata(result);
+            });
         }
     };
 
