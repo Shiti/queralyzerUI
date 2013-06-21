@@ -135,10 +135,24 @@ queralyzer.App = (function () {
         return node;
     }
 
+    function updateFilesortNode(node) {
+        var child = node.children[0];
+        if (node.type === "Filesort") {
+            if (child.type === "TEMPORARY") {
+                return child.children[0];
+            }
+        }
+        return node;
+    }
+
     function prettyPrint(tree) {
         var childNodes = [],
             child;
 
+        tree = updateFilterNode(tree);
+        if (tree.type === "Table scan") {
+            tree = tree.children[0];
+        }
         if (tree.children) {
 
             tree.children.forEach(function (child) {
@@ -157,14 +171,16 @@ queralyzer.App = (function () {
                 }
             }
 
+            if (tree.type === "DERIVED") {
+                tree = updateFilesortNode(tree.children[0]);
+            }
+
             childNodes = [];
             tree.children.forEach(function (child) {
                 childNodes.push(prettyPrint(child));
             });
 
             tree.children = childNodes;
-
-            tree = removeExtraNodes(tree);
 
             //TODO change it from tooltip to a details thing
             tree.title = tree.title || JSON.stringify(actualJsonData[tree.rowId]);
