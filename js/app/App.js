@@ -7,23 +7,6 @@ queralyzer.App = (function () {
         actualJsonData,
         treeDetails = {};
 
-    // Create the XHR object.
-    function createCORSRequest(method, url) {
-        var xhr = new XMLHttpRequest();
-        if ("withCredentials" in xhr) {
-            // XHR for Chrome/Firefox/Opera/Safari.
-            xhr.open(method, url, true);
-        } else if (typeof XDomainRequest != "undefined") {
-            // XDomainRequest for IE.
-            xhr = new XDomainRequest();
-            xhr.open(method, url);
-        } else {
-            // CORS not supported.
-            xhr = null;
-        }
-        return xhr;
-    }
-
     function tabulate(container, data, columns) {
         $(container).empty();
 
@@ -40,8 +23,14 @@ queralyzer.App = (function () {
             .data(columns)
             .enter()
             .append("th")
+            .attr("colspan", function (c) {
+                if (c === "extra") {
+                    return "3";
+                }
+                return "1";
+            })
             .text(function (column) {
-                return column.charAt(0).toUpperCase() + column.substr(1);
+                return queralyzer.toCamelCase(column);
             });
 
         rows = tableBody.selectAll("tr")
@@ -60,8 +49,21 @@ queralyzer.App = (function () {
             })
             .enter()
             .append("td")
+            .attr("colspan", function (d) {
+                if (d.column === "extra") {
+                    return "3";
+                }
+                return "1";
+            })
             .html(function (d) {
-                return "<div class='" + d.column + "' contenteditable='false'>" + d.value + "</div>";
+                var cellData = "<div class='" + d.column + "' contenteditable='false'>";
+                if (d.column === "table") {
+                    cellData += d.value.replace(/</, "&lt;").replace(/>/, "&gt;");
+                } else {
+                    cellData += (d.value || "NULL");
+                }
+                cellData += "</div>";
+                return cellData;
             });
 
     }
@@ -71,7 +73,7 @@ queralyzer.App = (function () {
             className = "leaves ",
             content,
             label = (node.id || "") + " " +
-                node.type[0] + node.type.toLowerCase().substring(1) +
+                queralyzer.toCamelCase(node.type) +
                 ((node.table) ? " " + node.table : "");
 
         if (node.children && node.children.length > 0) {
@@ -109,9 +111,16 @@ queralyzer.App = (function () {
     }
 
     function removeExtraNodes(tree) {
+        var child;
         if (tree.children) {
-            if (tree.children.length > 1) {
+            child = tree.children;
+            if ((child.length === 0) || (child.length > 1)) {
                 return tree;
+            }
+            if (child.length === 1) {
+                if ((!child[0].children) || (child[0].children.length === 0)) {
+                    return tree.children;
+                }
             }
             return removeExtraNodes(tree.children[0]);
         }
@@ -166,9 +175,7 @@ queralyzer.App = (function () {
 
             tree.children = childNodes;
 
-            /* if (tree.children.length === 1) {
-             tree = removeExtraNodes(tree);
-             }*/
+            tree = removeExtraNodes(tree);
             //TODO change it from tooltip to a details thing
             tree.title = tree.title || JSON.stringify(actualJsonData[tree.rowId]);
             return tree;
@@ -255,29 +262,29 @@ queralyzer.App = (function () {
         },
 
         updateTableMetaData: function (index, obj) {
-            var tableData = tableData[index];
-            tableData.tableName = obj.name;
-            tableData.rowCount = obj.rows;
+            var selectedTable = tableData[index];
+            selectedTable.tableName = obj.name;
+            selectedTable.rowCount = obj.rows;
         },
 
         updateIndexMetaData: function (index, obj) {
-            var indexData = indexData[index];
-            indexData.tableName = obj.table;
-            indexData.indexType = obj.type;
-            indexData.cardinality = obj.cardinality;
-            indexData.indexColumns = obj.columns;
+            var selectedIndex = indexData[index];
+            selectedIndex.tableName = obj.table;
+            selectedIndex.indexType = obj.type;
+            selectedIndex.cardinality = obj.cardinality;
+            selectedIndex.indexColumns = obj.columns;
         },
-        renderTree: function (data) {
+        renderTree: function (explainJsonData) {
             var tree,
                 cleanTree,
                 treeFunction,
                 nodes;
 
-            actualJsonData = JSON.parse(JSON.stringify(data));
-            tree = queralyzer.ExplainTree.generateTree(data);
+            actualJsonData = JSON.parse(JSON.stringify(explainJsonData));
+            tree = queralyzer.ExplainTree.generateTree(explainJsonData);
             treeDetails = {derived: 0, tableScan: 0, fileSort: 0};
 
-            /*analyze(data);
+            /*analyze(explainJsonData);
              console.log(treeDetails);*/
 
             cleanTree = removeExtraNodes(tree);
@@ -306,17 +313,43 @@ queralyzer.App = (function () {
         submitQuery: function () {
             var data = $('form#queryForm').serialize();
 
-            $.post('/query', data, function (result) {
-                queralyzer.App.renderTree(result);
-            }, 'json');
-
-            $.getJSON('/tablemetadata', function (result) {
-                queralyzer.App.addTableMetadata(result);
+            $.ajax({
+                type: "POST",
+                url: "/query",
+                data: data,
+                dataType: "json",
+                success: function (result) {
+                    queralyzer.App.renderTree(result);
+                },
+                error: function (e) {
+                    alert(e);
+                }
             });
 
-            $.getJSON('/indexmetadata', function (result) {
-                queralyzer.App.addIndexMetadata(result);
+            $.ajax({
+                type: "GET",
+                url: "/tablemetadata",
+                dataType: "json",
+                success: function (result) {
+                    queralyzer.App.addTableMetadata(result);
+                },
+                error: function (e) {
+                    alert(e);
+                }
             });
+
+            $.ajax({
+                type: "POST",
+                url: "/indexmetadata",
+                dataType: "json",
+                success: function (result) {
+                    queralyzer.App.addIndexMetadata(result);
+                },
+                error: function (e) {
+                    alert(e);
+                }
+            });
+
         },
         logError: function (error) {
             var errorLog = {

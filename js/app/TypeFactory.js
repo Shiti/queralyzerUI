@@ -9,6 +9,11 @@ queralyzer.customMatch = function (source, pattern) {
     return false;
 };
 
+queralyzer.toCamelCase = function (word) {
+    "use strict";
+    return word.charAt(0).toUpperCase() + word.substr(1).toLowerCase();
+}
+
 queralyzer.TypeFactory = (function () {
 
     "use strict";
