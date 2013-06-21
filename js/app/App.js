@@ -23,12 +23,6 @@ queralyzer.App = (function () {
             .data(columns)
             .enter()
             .append("th")
-            .attr("colspan", function (c) {
-                if (c === "extra") {
-                    return "3";
-                }
-                return "1";
-            })
             .text(function (column) {
                 return queralyzer.toCamelCase(column);
             });
@@ -49,12 +43,6 @@ queralyzer.App = (function () {
             })
             .enter()
             .append("td")
-            .attr("colspan", function (d) {
-                if (d.column === "extra") {
-                    return "3";
-                }
-                return "1";
-            })
             .html(function (d) {
                 var cellData = "<div class='" + d.column + "' contenteditable='false'>";
                 if (d.column === "table") {

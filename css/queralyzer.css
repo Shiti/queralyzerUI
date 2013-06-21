@@ -49,6 +49,10 @@ div.result {
     table-layout: auto!important;
 }
 
+div.Extra{
+    width:350px;
+}
+
 .icon-warning-sign {
     font-size: 10px;
     color: #faa732;
