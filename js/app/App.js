@@ -75,6 +75,9 @@ queralyzer.App = (function () {
         if (node.isChildVisible) {
             icon = "<i class='icon-minus'></i>";
         }
+        if (node.type === "Table scan") {
+            icon += "<i class='icon-warning-sign'></i>";
+        }
         content = "<a class='" + className + "'>";
         content += icon + label + "</a>";
         return content;
