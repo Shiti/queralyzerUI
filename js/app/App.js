@@ -60,9 +60,13 @@ queralyzer.App = (function () {
         var icon = "",
             className = "leaves ",
             content,
-            label = (node.id || "") + " " +
-                queralyzer.toCamelCase(node.type) +
-                ((node.table) ? " " + node.table : "");
+            label = (node.id || "") + " ";
+
+        if (node.type) {
+            label += queralyzer.toCamelCase(node.type);
+        }
+
+        label += ((node.table) ? " " + node.table : "");
 
         if (node.children && node.children.length > 0) {
             className += "collapsible";
@@ -72,9 +76,6 @@ queralyzer.App = (function () {
             icon = "<i class='icon-minus'></i>";
         }
         content = "<a class='" + className + "'>";
-        if (node.type === "Table scan") {
-            icon += "<i class='icon-warning-sign'></i>";
-        }
         content += icon + label + "</a>";
         return content;
     }
@@ -104,13 +105,6 @@ queralyzer.App = (function () {
             child = tree.children;
             if (child.length > 1) {
                 return tree;
-            }
-            if (child.length === 0) {
-                return {table: tree.table,
-                    title: tree.title,
-                    type: tree.type,
-                    rowId: tree.rowId
-                    };
             }
             if (child.length === 1) {
                 if ((!child[0].children) || (child[0].children.length === 0)) {
@@ -171,6 +165,7 @@ queralyzer.App = (function () {
             tree.children = childNodes;
 
             tree = removeExtraNodes(tree);
+
             //TODO change it from tooltip to a details thing
             tree.title = tree.title || JSON.stringify(actualJsonData[tree.rowId]);
             return tree;
@@ -343,8 +338,9 @@ queralyzer.App = (function () {
                 error: function (e) {
                     if (e.status === 501) {
                         $("#indexMetadata").html(e.responseText);
+                    } else {
+                        alert(e.responseText);
                     }
-                    alert(e.responseText);
                 }
             });
 
