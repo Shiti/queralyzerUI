@@ -45,7 +45,7 @@ queralyzer.App = (function () {
             .append("td")
             .html(function (d) {
                 var cellData = "<div class='" + d.column + "' contenteditable='false'>";
-                if (d.column === "table") {
+                if (d.value && (d.column === "table" || d.column === "possible_keys" || d.column === "key")) {
                     cellData += d.value.replace(/</, "&lt;").replace(/>/, "&gt;");
                 } else {
                     cellData += (d.value || "NULL");
@@ -102,15 +102,22 @@ queralyzer.App = (function () {
         var child;
         if (tree.children) {
             child = tree.children;
-            if ((child.length === 0) || (child.length > 1)) {
+            if (child.length > 1) {
                 return tree;
+            }
+            if (child.length === 0) {
+                return {table: tree.table,
+                    title: tree.title,
+                    type: tree.type,
+                    rowId: tree.rowId
+                    };
             }
             if (child.length === 1) {
                 if ((!child[0].children) || (child[0].children.length === 0)) {
                     return tree.children;
                 }
+                return removeExtraNodes(tree.children[0]);
             }
-            return removeExtraNodes(tree.children[0]);
         }
         return tree;
     }
@@ -295,8 +302,8 @@ queralyzer.App = (function () {
                 }
 
             });
-            createTreeLayout(nodes);
             renderRows();
+            createTreeLayout(nodes);
         },
         submitQuery: function () {
             var data = $('form#queryForm').serialize();
@@ -310,7 +317,7 @@ queralyzer.App = (function () {
                     queralyzer.App.renderTree(result);
                 },
                 error: function (e) {
-                    alert(e);
+                    alert(e.responseText);
                 }
             });
 
@@ -322,7 +329,7 @@ queralyzer.App = (function () {
                     queralyzer.App.addTableMetadata(result);
                 },
                 error: function (e) {
-                    alert(e);
+                    alert(e.responseText);
                 }
             });
 
@@ -334,7 +341,10 @@ queralyzer.App = (function () {
                     queralyzer.App.addIndexMetadata(result);
                 },
                 error: function (e) {
-                    alert(e);
+                    if (e.status === 501) {
+                        $("#indexMetadata").html(e.responseText);
+                    }
+                    alert(e.responseText);
                 }
             });
 
