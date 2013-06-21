@@ -41,12 +41,12 @@ li.secondary-nav {
 }
 
 div.result {
-    overflow-y: scroll;
+    overflow: auto;
     max-height: 700px;
 }
 
-#rowContainer{
-    font-size: 10px;
+#rowContainer table{
+    table-layout: auto!important;
 }
 
 .icon-warning-sign {

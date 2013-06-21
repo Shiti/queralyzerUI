@@ -287,10 +287,10 @@ queralyzer.ExplainTree = (function () {
         var newId;
         rows.forEach(function (row, index) {
             row.rowId = index;
-            row.Extra = (row.Extra !== "NULL") ? row.Extra : "";
+            row.Extra = row.Extra || "";
 
             if (row.table && !row.table.match(/\./)) {
-                if (row.id === "NULL" && row.table.match(/^<union(\d+)/)) {
+                if (row.id && row.table.match(/^<union(\d+)/)) {
                     newId = queralyzer.customMatch(row.table, /^<union(\d+)/);
                     row.id = newId;
                 } else {

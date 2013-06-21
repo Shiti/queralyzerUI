@@ -7,6 +7,23 @@ queralyzer.App = (function () {
         actualJsonData,
         treeDetails = {};
 
+    // Create the XHR object.
+    function createCORSRequest(method, url) {
+        var xhr = new XMLHttpRequest();
+        if ("withCredentials" in xhr) {
+            // XHR for Chrome/Firefox/Opera/Safari.
+            xhr.open(method, url, true);
+        } else if (typeof XDomainRequest != "undefined") {
+            // XDomainRequest for IE.
+            xhr = new XDomainRequest();
+            xhr.open(method, url);
+        } else {
+            // CORS not supported.
+            xhr = null;
+        }
+        return xhr;
+    }
+
     function tabulate(container, data, columns) {
         $(container).empty();
 
@@ -149,9 +166,9 @@ queralyzer.App = (function () {
 
             tree.children = childNodes;
 
-            if (tree.children.length === 1) {
-                tree = removeExtraNodes(tree);
-            }
+            /* if (tree.children.length === 1) {
+             tree = removeExtraNodes(tree);
+             }*/
             //TODO change it from tooltip to a details thing
             tree.title = tree.title || JSON.stringify(actualJsonData[tree.rowId]);
             return tree;
@@ -198,6 +215,12 @@ queralyzer.App = (function () {
             .on("click", function (d) {
                 click(d);
             });
+    }
+
+    function renderRows() {
+        var columns = ["id", "key", "key_len", "possible_keys", "ref", "rows",
+            "select_type", "table", "type", "Extra"];
+        tabulate("#rowContainer", actualJsonData, columns);
     }
 
     return {
@@ -278,11 +301,7 @@ queralyzer.App = (function () {
 
             });
             createTreeLayout(nodes);
-        },
-        renderRows: function () {
-            var columns = ["id", "key", "key_len", "possible_keys", "ref", "rows",
-                "select_type", "table", "type", "Extra"];
-            tabulate("#rowContainer", actualJsonData,columns);
+            renderRows();
         },
         submitQuery: function () {
             var data = $('form#queryForm').serialize();
@@ -297,6 +316,28 @@ queralyzer.App = (function () {
 
             $.getJSON('/indexmetadata', function (result) {
                 queralyzer.App.addIndexMetadata(result);
+            });
+        },
+        logError: function (error) {
+            var errorLog = {
+                "title": "Found a bug",
+                "body": error
+            };
+
+            $.ajax({
+                type: 'POST',
+                url: 'https://github.com/Shiti/queralyzerUI/issues',
+                data: JSON.stringify(errorLog),
+                xhrFields: {
+                    withCredentials: true
+                },
+                crossDomain: true,
+                success: function () {
+                    alert("Logged the issue");
+                },
+                error: function (e) {
+                    console.log(e);
+                }
             });
         }
     };
