@@ -395,7 +395,7 @@ queralyzer.App = (function () {
         },
         reset: function () {
             $.ajax({
-                type: 'DELETE',
+                type: 'GET',
                 url: '/reset',
                 success: function () {
                     clearContainers();
