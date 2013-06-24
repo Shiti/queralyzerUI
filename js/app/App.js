@@ -240,6 +240,7 @@ queralyzer.App = (function () {
     }
 
     function clearContainers() {
+        $("#userQuery").val("");
         $("#treeContainer").empty();
         $("#tableMetadata").empty();
         $("#indexMetadata").empty();
