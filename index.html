@@ -80,16 +80,19 @@
             });
 
             $('input#filter').on('keyup', function () {
-                var rex = new RegExp($(this).val(), 'i');
+                var regex = new RegExp($(this).val(), 'i');
                 $('.searchable tr').hide();
                 $('.searchable tr').filter(function () {
-                    return rex.test($(this).text());
+                    return regex.test($(this).text());
                 }).show();
             });
 
-           /* $.getJSON("data/access_plan_5.json", function (result) {
+            $("#reset").click(function(){
+                queralyzer.App.reset();
+            });
+
+           /* $.getJSON("data/access_plan_4.json", function (result) {
                 queralyzer.App.renderTree(result);
-                queralyzer.App.renderRows();
             });
 
             $.getJSON('data/tableMetaData.json', function (result) {
@@ -108,6 +111,7 @@
     <div class="headerWrapper">
         <img src="img/pramati.png" style="height:24px;float:left;">
         <a class="logo" href="index.html"></a>
+        <button id="reset" class="btn btn-primary pull-right" >Reset</button>
     </div>
 </header>
 <div class="container-fluid">

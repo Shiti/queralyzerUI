@@ -239,6 +239,12 @@ queralyzer.App = (function () {
         tabulate("#rowContainer", actualJsonData, columns);
     }
 
+    function clearContainers() {
+        $("#treeContainer").empty();
+        $("#tableMetadata").empty();
+        $("#indexMetadata").empty();
+    }
+
     return {
         addTableMetadata: function (jsData) {
             var columns = ["name", "rows", "action"],
@@ -372,7 +378,7 @@ queralyzer.App = (function () {
 
             $.ajax({
                 type: 'POST',
-                url: 'https://github.com/Shiti/queralyzerUI/issues',
+                url: 'https://github.com/repos/Shiti/queralyzerUI/issues',
                 data: JSON.stringify(errorLog),
                 xhrFields: {
                     withCredentials: true
@@ -385,7 +391,21 @@ queralyzer.App = (function () {
                     console.log(e);
                 }
             });
+        },
+        reset: function () {
+            $.ajax({
+                type: 'DELETE',
+                url: '/reset',
+                success: function () {
+                    clearContainers();
+                },
+                error: function (e) {
+                    alert(e.responseText);
+                }
+
+            });
         }
+
     };
 
 })();
