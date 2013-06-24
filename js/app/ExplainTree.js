@@ -218,7 +218,7 @@ queralyzer.ExplainTree = (function () {
     function buildQueryPlan(rows) {
         var enclosingScope,
             existingTree = {},
-            newTree,
+            newTree = {},
             first,
             isTempFilesort = false,
             firstExtra,
@@ -263,19 +263,24 @@ queralyzer.ExplainTree = (function () {
         while (i < rows.length) {
             r = rows[i];
             if (r.id === scope) {
-                newTree.type = "JOIN";
-                newTree.children.push(transformRowToNode(r));
+                newTree = {type: "JOIN",
+                    children: [existingTree, (transformRowToNode(r))]};
                 i += 1;
+                existingTree = newTree;
             } else {
                 end = i;
                 while (end < rows.length && rows[end].id >= r.id) {
                     end += 1;
                 }
                 enclosingScope = rows.splice(i, end - i);
-                newTree.type = r.select_type;
-                newTree.children.push(buildQueryPlan(enclosingScope));
+                newTree = {
+                    type: r.select_type,
+                    children: [existingTree, (buildQueryPlan(enclosingScope))]
+                };
             }
+
         }
+
         if (isTempFilesort) {
             newTree = filesort(temporary(existingTree, recursiveTableName(existingTree)));
         }
