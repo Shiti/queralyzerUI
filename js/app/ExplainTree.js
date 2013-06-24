@@ -66,7 +66,7 @@ queralyzer.ExplainTree = (function () {
             finalNode = {
                 type: "Table scan",
                 rows: undefined,
-                children: [childNode]
+                children: [node]
             };
         } else {
             finalNode = node;
@@ -158,7 +158,7 @@ queralyzer.ExplainTree = (function () {
             enclosingScope = rows[0];
         }
 
-        for (i = 0; i <= ids.length; i++) {
+        for (i = 0; i <= ids[0]; i++) {
             start = indexById(rows, ids[i]);
             end = (i < ids.length) ? indexById(rows, ids[i + 1]) : rows.length;
             childTree = buildQueryPlan(rows.splice(start, end - start));
@@ -246,13 +246,13 @@ queralyzer.ExplainTree = (function () {
         firstExtra = first.Extra;
         if (firstExtra.match(/Using temporary; Using filesort/)) {
             isTempFilesort = true;
-            firstExtra.replace(/Using temporary; Using filesort(?:; )?/, "");
+            first.Extra = firstExtra.replace(/Using temporary; Using filesort(?:; )?/, "");
         } else if (firstExtra.match(/Using filesort/) && first.type.match(/^(?:system|const)$/)) {
             firstNonConst = $.grep(rows, function (elem) {
                 return !elem.type.match(/^(?:system|const)$/);
             });
             if (firstNonConst) {
-                firstExtra.replace(/Using filesort(?:; )?/, "");
+                first.Extra = firstExtra.replace(/Using filesort(?:; )?/, "");
                 firstNonConst.Extra += "; Using filesort";
             }
         }
@@ -290,7 +290,7 @@ queralyzer.ExplainTree = (function () {
             row.Extra = row.Extra || "";
 
             if (row.table && !row.table.match(/\./)) {
-                if (row.id && row.table.match(/^<union(\d+)/)) {
+                if (!row.id && row.table.match(/^<union(\d+)/)) {
                     newId = queralyzer.customMatch(row.table, /^<union(\d+)/);
                     row.id = newId;
                 } else {
