@@ -282,7 +282,7 @@ queralyzer.App = (function () {
         $.ajax({
             type: "POST",
             url: "/" + url,
-            data: encodeURI(dataToSend),
+            data: encodeURI(url + "=" + JSON.stringify(dataToSend)),
             error: function (e) {
                 alert(e.responseText);
             }
@@ -290,25 +290,20 @@ queralyzer.App = (function () {
     }
 
     function updateTableMetaData(index, obj) {
-        var selectedTable = tableData[index],
-            updatedData;
+        var selectedTable = tableData[index];
         selectedTable.rowCount = obj.rows;
-        updatedData = "tablemetadata=" + JSON.stringify(tableData);
-        postData(updatedData, "tablemetadata");
+        postData(tableData, "tablemetadata");
     }
 
     function updateIndexMetaData(index, obj) {
-        var selectedIndex = indexData[index],
-            updatedData;
+        var selectedIndex = indexData[index];
+
         selectedIndex.indexType = obj.type;
         selectedIndex.cardinality = obj.cardinality;
         selectedIndex.indexColumns = obj.columns;
 
-        updatedData = "indexmetadata=" + JSON.stringify(indexData);
-
-        postData(updatedData, "indexmetadata");
+        postData(indexData, "indexmetadata");
     }
-
 
     function logError(error) {
         var errorLog = {
@@ -371,11 +366,10 @@ queralyzer.App = (function () {
                 nodes;
 
             actualJsonData = JSON.parse(JSON.stringify(explainJsonData));
+            renderRows();
+
             tree = queralyzer.ExplainTree.generateTree(explainJsonData);
             treeDetails = {derived: 0, tableScan: 0, fileSort: 0};
-
-            /*analyze(explainJsonData);
-             console.log(treeDetails);*/
 
             cleanTree = removeExtraNodes(tree);
             if (cleanTree.type === "UNION") {
@@ -401,7 +395,7 @@ queralyzer.App = (function () {
                 }
 
             });
-            renderRows();
+
             createTreeLayout(nodes);
         },
         submitQuery: function () {
