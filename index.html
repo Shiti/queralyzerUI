@@ -23,46 +23,12 @@
 
             $(document).on("click", "i.icon-edit", function (e) {
                 var icon = $(e.target);
-                var row = icon.closest("tr");
-                if (icon.hasClass("icon-edit")) {
-                    icon.removeClass("icon-edit");
-                    icon.addClass("icon-ok");
-
-                    row.find("div").each(function (index, elem) {
-                        var element = $(elem);
-                        if (!element.hasClass("action")) {
-                            element.attr("contenteditable", true);
-                        }
-                    });
-                }
+                queralyzer.App.enableEditing(icon);
             });
 
-            $(document).on("click", "i.icon-ok", function (e) {
+            $(document).on("click", "i.icon-save", function (e) {
                 var icon = $(e.target);
-                var newData = {};
-                var row = icon.closest("tr");
-                var rowId = row.attr("id")
-                var tableContainer = icon.closest("table").parent();
-                if (icon.hasClass("icon-ok")) {
-                    icon.removeClass("icon-ok");
-                    icon.addClass("icon-edit");
-
-                    row.find("div").each(function (index, elem) {
-                        var element = $(elem);
-                        if (!element.hasClass("action")) {
-                            newData[element.attr("class")] = element.text();
-                            element.attr("contenteditable", false);
-                        }
-                    });
-                    var id = tableContainer.attr("id");
-
-                    if (id === "tableMetadata") {
-                        queralyzer.App.updateTableMetaData(rowId, newData)
-                    }
-                    else {
-                        queralyzer.App.updateIndexMetaData(rowId, newData)
-                    }
-                }
+                queralyzer.App.saveChanges(icon);
             });
 
             $("#userQuery").attr("rows", 24);
@@ -80,29 +46,25 @@
             });
 
             $('input#filter').on('keyup', function () {
-                var regex = new RegExp($(this).val(), 'i');
-                $('.searchable tr').hide();
-                $('.searchable tr').filter(function () {
-                    return regex.test($(this).text());
-                }).show();
+                var searchText = $(this).val();
+                queralyzer.App.filterRows(searchText);
             });
 
             $("#reset").click(function(){
                 queralyzer.App.reset();
             });
 
-           /* $.getJSON("data/access_plan_4.json", function (result) {
+           /* $.getJSON("data/access_plan_5.json", function (result) {
                 queralyzer.App.renderTree(result);
             });
 
             $.getJSON('data/tableMetaData.json', function (result) {
-                queralyzer.App.addTableMetadata(result);
+                queralyzer.App.renderTableMetaData(result);
             });
 
             $.getJSON('data/indexMetaData.json', function (result) {
-                queralyzer.App.addIndexMetadata(result);
+                queralyzer.App.renderIndexMetaData(result);
             });*/
-
         });
     </script>
 </head>

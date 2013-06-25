@@ -7,16 +7,20 @@ queralyzer.App = (function () {
         actualJsonData,
         treeDetails = {};
 
-    function tabulate(container, data, columns) {
+    function tabulate(container, data, columns, isSearchable) {
         $(container).empty();
 
         var table = d3.select(container).append("table")
-                .attr("class", "table table-condensed table-fixed-header")
+                .attr("class", "table table-condensed")
                 .style("table-layout", "fixed"),
             tableHeader = table.append("thead"),
-            tableBody = table.append("tbody").attr("class", "searchable"),
+            tableBody = table.append("tbody"),
             rows,
             cells;
+
+        if (isSearchable) {
+            tableBody.attr("class", "searchable");
+        }
 
         tableHeader.append("tr")
             .selectAll("th")
@@ -243,7 +247,7 @@ queralyzer.App = (function () {
     function renderRows() {
         var columns = ["id", "key", "key_len", "possible_keys", "ref", "rows",
             "select_type", "table", "type", "Extra"];
-        tabulate("#rowContainer", actualJsonData, columns);
+        tabulate("#rowContainer", actualJsonData, columns, false);
     }
 
     function clearContainers() {
@@ -253,8 +257,37 @@ queralyzer.App = (function () {
         $("#indexMetadata").empty();
     }
 
+    function updateTableMetaData(index, obj) {
+        var selectedTable = tableData[index];
+        selectedTable.rowCount = obj.rows;
+        $.ajax({
+            type: "POST",
+            url: "/tablemetadata",
+            data: tableData,
+            error: function (e) {
+                alert(e.responseText);
+            }
+        });
+
+    }
+
+    function updateIndexMetaData(index, obj) {
+        var selectedIndex = indexData[index];
+        selectedIndex.indexType = obj.type;
+        selectedIndex.cardinality = obj.cardinality;
+        selectedIndex.indexColumns = obj.columns;
+        $.ajax({
+            type: "POST",
+            url: "/indexmetadata",
+            data: indexData,
+            error: function (e) {
+                alert(e.responseText);
+            }
+        });
+    }
+
     return {
-        addTableMetadata: function (jsData) {
+        renderTableMetaData: function (jsData) {
             var columns = ["name", "rows", "action"],
                 data = [];
             tableData = jsData;
@@ -265,10 +298,10 @@ queralyzer.App = (function () {
                 a.action = "<i class='icon-edit'></i>";
                 data.push(a);
             });
-            tabulate("#tableMetadata", data, columns);
+            tabulate("#tableMetadata", data, columns, true);
         },
 
-        addIndexMetadata: function (jsData) {
+        renderIndexMetaData: function (jsData) {
             var columns = ["table", "type", "columns", "cardinality", "action"],
                 data = [];
             indexData = jsData;
@@ -281,22 +314,9 @@ queralyzer.App = (function () {
                 a.action = "<i class='icon-edit'></i>";
                 data.push(a);
             });
-            tabulate("#indexMetadata", data, columns);
+            tabulate("#indexMetadata", data, columns, true);
         },
 
-        updateTableMetaData: function (index, obj) {
-            var selectedTable = tableData[index];
-            selectedTable.tableName = obj.name;
-            selectedTable.rowCount = obj.rows;
-        },
-
-        updateIndexMetaData: function (index, obj) {
-            var selectedIndex = indexData[index];
-            selectedIndex.tableName = obj.table;
-            selectedIndex.indexType = obj.type;
-            selectedIndex.cardinality = obj.cardinality;
-            selectedIndex.indexColumns = obj.columns;
-        },
         renderTree: function (explainJsonData) {
             var tree,
                 cleanTree,
@@ -354,7 +374,7 @@ queralyzer.App = (function () {
                 url: "/tablemetadata",
                 dataType: "json",
                 success: function (result) {
-                    queralyzer.App.addTableMetadata(result);
+                    queralyzer.App.renderTableMetaData(result);
                 },
                 error: function (e) {
                     alert(e.responseText);
@@ -362,11 +382,11 @@ queralyzer.App = (function () {
             });
 
             $.ajax({
-                type: "POST",
+                type: "GET",
                 url: "/indexmetadata",
                 dataType: "json",
                 success: function (result) {
-                    queralyzer.App.addIndexMetadata(result);
+                    queralyzer.App.renderIndexMetaData(result);
                 },
                 error: function (e) {
                     if (e.status === 501) {
@@ -402,7 +422,7 @@ queralyzer.App = (function () {
         },
         reset: function () {
             $.ajax({
-                type: 'GET',
+                type: 'POST',
                 url: '/reset',
                 success: function () {
                     clearContainers();
@@ -412,6 +432,51 @@ queralyzer.App = (function () {
                 }
 
             });
+        },
+        enableEditing: function (iconElem) {
+            var row = iconElem.closest("tr");
+
+            iconElem.removeClass("icon-edit");
+            iconElem.addClass("icon-save");
+
+            row.find("div").each(function (index, elem) {
+                var element = $(elem);
+                if (!(element.hasClass("action") || element.hasClass("name") || element.hasClass("table"))) {
+                    element.attr("contenteditable", true);
+                }
+            });
+        },
+        saveChanges: function (iconElem) {
+            var newData = {},
+                row = iconElem.closest("tr"),
+                rowId = row.attr("id"),
+                tableContainer = iconElem.closest("table").parent(),
+                containerId = tableContainer.attr("id");
+
+            iconElem.removeClass("icon-save");
+            iconElem.addClass("icon-edit");
+
+            row.find("div").each(function (index, elem) {
+                var element = $(elem);
+                if (!element.hasClass("action")) {
+                    newData[element.attr("class")] = element.text();
+                    element.attr("contenteditable", false);
+                }
+            });
+
+            if (containerId === "tableMetadata") {
+                updateTableMetaData(rowId, newData);
+            } else {
+                updateIndexMetaData(rowId, newData);
+            }
+
+        },
+        filterRows: function (text) {
+            var regex = new RegExp(text, 'i');
+            $('.searchable tr').hide();
+            $('.searchable tr').filter(function () {
+                return regex.test($(this).text());
+            }).show();
         }
 
     };
