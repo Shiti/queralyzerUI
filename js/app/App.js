@@ -282,7 +282,7 @@ queralyzer.App = (function () {
         $.ajax({
             type: "POST",
             url: "/" + url,
-            data: dataToSend,
+            data: encodeURI(dataToSend),
             error: function (e) {
                 alert(e.responseText);
             }
