@@ -202,6 +202,30 @@ queralyzer.App = (function () {
         return tree;
     }
 
+    function prettyPrintUnion(tree) {
+        var childNodes = [],
+            id = tree.id;
+
+        if (tree.type === "Table scan") {
+            tree = tree.children[0];
+        }
+
+        if (tree.type === "Table") {
+            tree = {type: tree.table};
+        }
+        if (tree.children) {
+            childNodes = [];
+            tree.children.forEach(function (child) {
+                childNodes.push(prettyPrintUnion(child));
+            });
+
+            tree.children = childNodes;
+        }
+
+        tree.id = id;
+        return tree;
+    }
+
     function analyze(tree) {
         if (tree.type === "DERIVED") {
             treeDetails.derived += 1;
@@ -285,6 +309,29 @@ queralyzer.App = (function () {
         });
     }
 
+    function logError(error) {
+        var errorLog = {
+            "title": "Found a bug",
+            "body": error
+        };
+
+        $.ajax({
+            type: 'POST',
+            url: 'https://github.com/repos/Shiti/queralyzerUI/issues',
+            data: JSON.stringify(errorLog),
+            xhrFields: {
+                withCredentials: true
+            },
+            crossDomain: true,
+            success: function () {
+                alert("Logged the issue");
+            },
+            error: function (e) {
+                console.log(e);
+            }
+        });
+    }
+
     return {
         renderTableMetaData: function (jsData) {
             var columns = ["name", "rows", "action"],
@@ -330,7 +377,11 @@ queralyzer.App = (function () {
              console.log(treeDetails);*/
 
             cleanTree = removeExtraNodes(tree);
-            prettyPrint(cleanTree);
+            if (cleanTree.type === "UNION") {
+                prettyPrintUnion(cleanTree);
+            } else {
+                prettyPrint(cleanTree);
+            }
 
             treeFunction = d3.layout.tree()
                 .value(function (d, i) {
@@ -397,28 +448,6 @@ queralyzer.App = (function () {
             });
 
         },
-        logError: function (error) {
-            var errorLog = {
-                "title": "Found a bug",
-                "body": error
-            };
-
-            $.ajax({
-                type: 'POST',
-                url: 'https://github.com/repos/Shiti/queralyzerUI/issues',
-                data: JSON.stringify(errorLog),
-                xhrFields: {
-                    withCredentials: true
-                },
-                crossDomain: true,
-                success: function () {
-                    alert("Logged the issue");
-                },
-                error: function (e) {
-                    console.log(e);
-                }
-            });
-        },
         reset: function () {
             $.ajax({
                 type: 'POST',
@@ -480,7 +509,8 @@ queralyzer.App = (function () {
 
     };
 
-})();
+})
+    ();
 
 
 
