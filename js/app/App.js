@@ -131,7 +131,10 @@ queralyzer.App = (function () {
                 node.table = grandChild.table;
                 node.title = "Using WHERE";
                 node.children = [];
+            } else {
+                node = child;
             }
+
         } else if (node.type === "Bookmark lookup") {
             node = node.children[1];
         }
@@ -150,6 +153,7 @@ queralyzer.App = (function () {
 
     function prettyPrint(tree) {
         var childNodes = [],
+            id = tree.id,
             child;
 
         tree = updateFilterNode(tree);
@@ -179,6 +183,7 @@ queralyzer.App = (function () {
             }
 
             childNodes = [];
+
             tree.children.forEach(function (child) {
                 childNodes.push(prettyPrint(child));
             });
@@ -187,8 +192,10 @@ queralyzer.App = (function () {
 
             //TODO change it from tooltip to a details thing
             tree.title = tree.title || JSON.stringify(actualJsonData[tree.rowId]);
+            tree.id = id;
             return tree;
         }
+        tree.id = id;
         return tree;
     }
 
