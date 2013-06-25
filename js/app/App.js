@@ -278,42 +278,31 @@ queralyzer.App = (function () {
         $("#indexMetadata").empty();
     }
 
-    function updateTableMetaData(index, obj) {
-        var selectedTable = tableData[index],
-            updatedData = {
-                tablemetadata: tableData
-            };
-        selectedTable.rowCount = obj.rows;
-
+    function postData(dataToSend, url) {
         $.ajax({
             type: "POST",
-            url: "/tablemetadata",
-            data: JSON.stringify(updatedData),
+            url: "/" + url,
+            data: dataToSend,
             error: function (e) {
                 alert(e.responseText);
             }
         });
+    }
 
+    function updateTableMetaData(index, obj) {
+        var selectedTable = tableData[index];
+        selectedTable.rowCount = obj.rows;
+        postData(tableData, "tablemetadata");
     }
 
     function updateIndexMetaData(index, obj) {
-        var selectedIndex = indexData[index],
-            updatedData = {
-                indexmetadata: indexData
-            };
-
+        var selectedIndex = indexData[index];
         selectedIndex.indexType = obj.type;
         selectedIndex.cardinality = obj.cardinality;
         selectedIndex.indexColumns = obj.columns;
-        $.ajax({
-            type: "POST",
-            url: "/indexmetadata",
-            data: JSON.stringify(updatedData),
-            error: function (e) {
-                alert(e.responseText);
-            }
-        });
+        postData(indexData, "indexmetadata");
     }
+
 
     function logError(error) {
         var errorLog = {
