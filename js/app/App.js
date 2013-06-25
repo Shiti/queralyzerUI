@@ -70,8 +70,6 @@ queralyzer.App = (function () {
             label += queralyzer.toCamelCase(node.type);
         }
 
-        label += ((node.table) ? " " + node.table : "");
-
         if (node.children && node.children.length > 0) {
             className += "collapsible";
             icon = "<i class='icon-plus'></i>";
@@ -131,10 +129,10 @@ queralyzer.App = (function () {
             child = node.children[0];
             grandChild = node.children[0].children[0];
             if (child.type === "Table scan" && grandChild.type === "Table") {
-                node.type = "Filter on";
-                node.table = grandChild.table;
-                node.title = "Using WHERE";
-                node.children = [];
+                node = {
+                    type: "Filter on " + grandChild.table,
+                    title: "Using WHERE"
+                };
             } else {
                 node = child;
             }
@@ -177,7 +175,7 @@ queralyzer.App = (function () {
 
             if (tree.type === "Join buffer") {
                 child = tree.children[0];
-                if (child.type === "Filter on") {
+                if (child.type.match(/Filter on [A-Za-z0-9_]+/)) {
                     tree = child;
                 }
             }
@@ -186,13 +184,14 @@ queralyzer.App = (function () {
                 tree = updateFilesortNode(tree.children[0]);
             }
 
-            childNodes = [];
+            if (tree.children) {
+                childNodes = [];
+                tree.children.forEach(function (child) {
+                    childNodes.push(prettyPrint(child));
+                });
 
-            tree.children.forEach(function (child) {
-                childNodes.push(prettyPrint(child));
-            });
-
-            tree.children = childNodes;
+                tree.children = childNodes;
+            }
 
             //TODO change it from tooltip to a details thing
             tree.title = tree.title || JSON.stringify(actualJsonData[tree.rowId]);
@@ -340,7 +339,7 @@ queralyzer.App = (function () {
             nodes = treeFunction.nodes(cleanTree);
 
             nodes.forEach(function (elem) {
-                if (elem.children && elem.children.length > 0) {
+                if (elem.children) {
                     elem.isChildVisible = true;
                 }
                 if (elem.parent) {
