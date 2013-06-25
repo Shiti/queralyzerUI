@@ -290,17 +290,24 @@ queralyzer.App = (function () {
     }
 
     function updateTableMetaData(index, obj) {
-        var selectedTable = tableData[index];
+        var selectedTable = tableData[index],
+            updatedData = {
+                tablemetadata: tableData
+            };
         selectedTable.rowCount = obj.rows;
-        postData(tableData, "tablemetadata");
+        postData(updatedData, "tablemetadata");
     }
 
     function updateIndexMetaData(index, obj) {
-        var selectedIndex = indexData[index];
+        var selectedIndex = indexData[index],
+            updatedData = {
+                indexmetadata: indexData
+            };
+
         selectedIndex.indexType = obj.type;
         selectedIndex.cardinality = obj.cardinality;
         selectedIndex.indexColumns = obj.columns;
-        postData(indexData, "indexmetadata");
+        postData(updatedData, "indexmetadata");
     }
 
 
@@ -312,7 +319,7 @@ queralyzer.App = (function () {
 
         $.ajax({
             type: 'POST',
-            url: 'https://github.com/repos/Shiti/queralyzerUI/issues',
+            url: '//github.com/repos/Shiti/queralyzerUI/issues',
             data: JSON.stringify(errorLog),
             xhrFields: {
                 withCredentials: true
@@ -504,8 +511,7 @@ queralyzer.App = (function () {
 
     };
 
-})
-    ();
+})();
 
 
 
