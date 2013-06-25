@@ -291,18 +291,21 @@ queralyzer.App = (function () {
 
     function updateTableMetaData(index, obj) {
         var selectedTable = tableData[index],
-            updatedData = "tablemetadata=" + JSON.stringify(tableData);
+            updatedData;
         selectedTable.rowCount = obj.rows;
+        updatedData = "tablemetadata=" + JSON.stringify(tableData);
         postData(updatedData, "tablemetadata");
     }
 
     function updateIndexMetaData(index, obj) {
         var selectedIndex = indexData[index],
-            updatedData = "indexmetadata=" + JSON.stringify(indexData);
-
+            updatedData;
         selectedIndex.indexType = obj.type;
         selectedIndex.cardinality = obj.cardinality;
         selectedIndex.indexColumns = obj.columns;
+
+        updatedData = "indexmetadata=" + JSON.stringify(indexData);
+
         postData(updatedData, "indexmetadata");
     }
 
