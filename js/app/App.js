@@ -189,11 +189,7 @@ queralyzer.App = (function () {
                 tree.children.forEach(function (child) {
                     childNodes.push(prettyPrint(child));
                 });
-
                 tree.children = childNodes;
-                if (tree.children.length === 1) {
-                    tree = tree.children[0];
-                }
             }
 
             //TODO change it from tooltip to a details thing
@@ -222,9 +218,6 @@ queralyzer.App = (function () {
                 childNodes.push(prettyPrintUnion(child));
             });
             tree.children = childNodes;
-            if (tree.children.length === 1) {
-                tree = tree.children[0];
-            }
         }
 
         tree.id = id;
