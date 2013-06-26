@@ -7,19 +7,34 @@
           rel="stylesheet">
     <link href="//netdna.bootstrapcdn.com/font-awesome/3.1.1/css/font-awesome.css" rel="stylesheet">
     <link rel="stylesheet" href="css/queralyzer.css">
-    <link rel="stylesheet" href="css/jquery-linedtextarea.css">
+
+    <link rel="stylesheet" href="/codemirror/codemirror.css">
 
     <script src="js/lib/d3.min.js" type="text/javascript"></script>
     <script src="js/lib/jquery.min.js"></script>
+
+    <script src="/codemirror/codemirror.js"></script>
+    <script src="/codemirror/sql.js"></script>
 
     <script src="js/app/TypeFactory.js" type="text/javascript"></script>
     <script src="js/app/ExplainTree.js" type="text/javascript"></script>
     <script src="js/app/App.js" type="text/javascript"></script>
     <script src="bootstrap/js/bootstrap.min.js" type="text/javascript"></script>
-    <script src="js/lib/jquery-linedtextarea.js" type="text/javascript"></script>
 
     <script type="text/javascript">
         $(function () {
+
+            $(".queryEditor").height(window.innerHeight*0.56+"px");
+            $(".metadata").height(window.innerHeight*0.32+"px");
+            $(".tree").height(window.innerHeight*0.9+"px");
+            $(".result").height(window.innerHeight*0.8+"px");
+
+            CodeMirror.fromTextArea($("#userQuery")[0],{
+                mode:"text/x-mysql",
+                height:"100%",
+                lineNumbers:true,
+                textWrapping: true
+            });
 
             $(document).on("click", "i.icon-edit", function (e) {
                 var icon = $(e.target);
@@ -30,9 +45,6 @@
                 var icon = $(e.target);
                 queralyzer.App.saveChanges(icon);
             });
-
-            $("#userQuery").attr("rows", 24);
-            $("#userQuery").linedtextarea();
 
             $('#submitButton').click(function (e) {
                 e.preventDefault();
@@ -54,7 +66,7 @@
                 queralyzer.App.reset();
             });
 
-           /* $.getJSON("data/access_plan_5.json", function (result) {
+           /* $.getJSON("data/access_plan_3.json", function (result) {
                 queralyzer.App.renderTree(result);
             });
 

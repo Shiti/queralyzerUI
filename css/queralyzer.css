@@ -46,7 +46,6 @@ li.secondary-nav {
 
 div.result {
     overflow: auto;
-    max-height: 700px;
 }
 
 #rowContainer table {
@@ -85,24 +84,15 @@ a.collapsible {
     cursor: pointer;
 }
 
-/*@media (min-height: 769px) and (max-height: 979px) {*/
-
 .queryEditor {
-    height: 70%;
     padding: 5px;
 }
 
 .metadata {
-    height: 30%;
     margin-top: 1.6%;
     padding: 5px;
-    min-height: 300px;
 }
 
 .tree {
-    height: 90%;
     padding: 5px;
-    min-height: 810px;
 }
-
-/*}*/
