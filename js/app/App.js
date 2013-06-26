@@ -416,7 +416,7 @@ queralyzer.App = (function () {
             createTreeLayout(nodes);
         },
         submitQuery: function () {
-            var data = $('form#queryForm').serialize().replace("%0D%0A", "");
+            var data = $('form#queryForm').serialize().replace(/%0D%0A/g, "");
 
             $.ajax({
                 type: "POST",
