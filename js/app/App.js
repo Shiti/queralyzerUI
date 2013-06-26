@@ -121,7 +121,7 @@ queralyzer.App = (function () {
         return tree;
     }
 
-    function updateFilterNode(node) {
+    function updateNode(node) {
         var child,
             id,
             grandChild;
@@ -166,7 +166,7 @@ queralyzer.App = (function () {
             id = tree.id,
             child;
 
-        tree = updateFilterNode(tree);
+        tree = updateNode(tree);
 
         if (tree.type === "Table scan") {
             tree = tree.children[0];
@@ -177,10 +177,9 @@ queralyzer.App = (function () {
                 if (child.type === "Bookmark lookup") {
                     tree.type += " using bookmark lookup";
                 }
-                childNodes.push(updateFilterNode(child));
+                childNodes.push(updateNode(child));
             });
             tree.children = childNodes;
-
 
             if (tree.type === "Join buffer") {
                 child = tree.children[0];
@@ -202,8 +201,6 @@ queralyzer.App = (function () {
                 tree.children = childNodes;
             }
 
-            //TODO change it from tooltip to a details thing
-            tree.title = tree.title || JSON.stringify(actualJsonData[tree.rowId]);
             tree.id = id;
             return tree;
         }
@@ -287,21 +284,18 @@ queralyzer.App = (function () {
         $("#indexMetadata").empty();
     }
 
-    function postData(dataToSend, url) {
+    function updateTableMetaData(index, obj) {
+        var selectedTable = tableData[index];
+        selectedTable.rowCount = obj.rows;
+
         $.ajax({
             type: "POST",
-            url: "/" + url,
-            data: encodeURI(url + "=" + JSON.stringify(dataToSend)),
+            url: "/tablemetadata",
+            data: encodeURI("tablemetadata=" + JSON.stringify(tableData)),
             error: function (e) {
                 alert(e.responseText);
             }
         });
-    }
-
-    function updateTableMetaData(index, obj) {
-        var selectedTable = tableData[index];
-        selectedTable.rowCount = obj.rows;
-        postData(tableData, "tablemetadata");
     }
 
     function updateIndexMetaData(index, obj) {
@@ -311,7 +305,17 @@ queralyzer.App = (function () {
         selectedIndex.cardinality = obj.cardinality;
         selectedIndex.indexColumns = obj.columns;
 
-        postData(indexData, "indexmetadata");
+        $.ajax({
+            type: "POST",
+            url: "/indexmetadata",
+            data: encodeURI("indexmetadata=" + JSON.stringify(indexData)),
+            success: function (result) {
+                queralyzer.App.renderTree(result);
+            },
+            error: function (e) {
+                alert(e.responseText);
+            }
+        });
     }
 
     function logError(error) {
@@ -322,7 +326,7 @@ queralyzer.App = (function () {
 
         $.ajax({
             type: 'POST',
-            url: '//github.com/repos/Shiti/queralyzerUI/issues',
+            url: 'https://github.com/repos/Shiti/queralyzerUI/issues',
             data: JSON.stringify(errorLog),
             xhrFields: {
                 withCredentials: true
