@@ -375,14 +375,17 @@ queralyzer.App = (function () {
             actualJsonData = JSON.parse(JSON.stringify(explainJsonData));
             renderRows();
 
+
             tree = queralyzer.ExplainTree.generateTree(explainJsonData);
             treeDetails = {derived: 0, tableScan: 0, fileSort: 0};
 
-            cleanTree = removeExtraNodes(tree);
-            if (cleanTree.type === "UNION") {
-                prettyPrintUnion(cleanTree);
-            } else {
-                prettyPrint(cleanTree);
+            if (actualJsonData.length > 1) {
+                cleanTree = removeExtraNodes(tree);
+                if (cleanTree.type === "UNION") {
+                    prettyPrintUnion(cleanTree);
+                } else {
+                    prettyPrint(cleanTree);
+                }
             }
 
             treeFunction = d3.layout.tree()
