@@ -139,7 +139,12 @@ queralyzer.App = (function () {
 
         } else if (node.type === "Bookmark lookup") {
             node = node.children[1];
+        } else if (node.type === "Table scan" && node.children[0].type === "Table") {
+            node = {type: node.children[0].table};
+        } else if (node.type === "Table scan") {
+            node = node.children[0];
         }
+
         return node;
     }
 
@@ -155,10 +160,12 @@ queralyzer.App = (function () {
 
     function prettyPrint(tree) {
         var childNodes = [],
+            updatedChild,
             id = tree.id,
             child;
 
         tree = updateFilterNode(tree);
+
         if (tree.type === "Table scan") {
             tree = tree.children[0];
         }
@@ -187,7 +194,8 @@ queralyzer.App = (function () {
             if (tree.children) {
                 childNodes = [];
                 tree.children.forEach(function (child) {
-                    childNodes.push(prettyPrint(child));
+                    updatedChild = prettyPrint(child);
+                    childNodes.push(updatedChild);
                 });
                 tree.children = childNodes;
             }
@@ -203,19 +211,18 @@ queralyzer.App = (function () {
 
     function prettyPrintUnion(tree) {
         var childNodes = [],
+            updatedChild,
             id = tree.id;
 
-        if (tree.type === "Table scan") {
-            tree = tree.children[0];
-        }
-
-        if (tree.type === "Table") {
-            tree = {type: tree.table};
-        }
         if (tree.children) {
             childNodes = [];
             tree.children.forEach(function (child) {
-                childNodes.push(prettyPrintUnion(child));
+                if (child.type === "UNION") {
+                    updatedChild = prettyPrintUnion(child);
+                } else {
+                    updatedChild = prettyPrint(child);
+                }
+                childNodes.push(updatedChild);
             });
             tree.children = childNodes;
         }
