@@ -29,7 +29,7 @@
             $(".tree").height(window.innerHeight*0.9+"px");
             $(".result").height(window.innerHeight*0.8+"px");
 
-            CodeMirror.fromTextArea($("#userQuery")[0],{
+            var editor= CodeMirror.fromTextArea($("#userQuery")[0],{
                 mode:"text/x-mysql",
                 height:"100%",
                 lineNumbers:true,
@@ -48,11 +48,13 @@
 
             $('#submitButton').click(function (e) {
                 e.preventDefault();
+                editor.save();
                 queralyzer.App.submitQuery();
             });
 
             $('#userQuery').keydown(function (e) {
                 if (e.keyCode === 13) {
+                    editor.save();
                     queralyzer.App.submitQuery();
                 }
             });
@@ -66,7 +68,7 @@
                 queralyzer.App.reset();
             });
 
-           /* $.getJSON("data/access_plan_3.json", function (result) {
+            /*$.getJSON("data/access_plan_3.json", function (result) {
                 queralyzer.App.renderTree(result);
             });
 
