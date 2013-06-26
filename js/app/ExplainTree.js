@@ -198,7 +198,7 @@ queralyzer.ExplainTree = (function () {
             derivedId = queralyzer.customMatch(filteredRow.table, /^<derived(\d+)>$/);
             start = indexById(rows, derivedId);
             end = start;
-            while (end < rows.length && rows[end].id >= derivedId) {
+            while (end < rows.length && Number(rows[end].id) >= Number(derivedId)) {
                 end += 1;
             }
 
@@ -269,7 +269,7 @@ queralyzer.ExplainTree = (function () {
                 existingTree = newTree;
             } else {
                 end = i;
-                while (end < rows.length && rows[end].id >= r.id) {
+                while (end < rows.length && Number(rows[end].id) >= Number(r.id)) {
                     end += 1;
                 }
                 enclosingScope = rows.splice(i, end - i);
