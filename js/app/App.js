@@ -123,8 +123,10 @@ queralyzer.App = (function () {
 
     function updateFilterNode(node) {
         var child,
+            id,
             grandChild;
 
+        id = node.id;
         if (node.type === "Filter with WHERE") {
             child = node.children[0];
             grandChild = node.children[0].children[0];
@@ -144,7 +146,7 @@ queralyzer.App = (function () {
         } else if (node.type === "Table scan") {
             node = node.children[0];
         }
-
+        node.id = id;
         return node;
     }
 
@@ -375,7 +377,6 @@ queralyzer.App = (function () {
             actualJsonData = JSON.parse(JSON.stringify(explainJsonData));
             renderRows();
 
-
             tree = queralyzer.ExplainTree.generateTree(explainJsonData);
             treeDetails = {derived: 0, tableScan: 0, fileSort: 0};
 
@@ -386,6 +387,8 @@ queralyzer.App = (function () {
                 } else {
                     prettyPrint(cleanTree);
                 }
+            } else {
+                cleanTree = tree;
             }
 
             treeFunction = d3.layout.tree()
