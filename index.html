@@ -33,7 +33,13 @@
                 mode:"text/x-mysql",
                 height:"100%",
                 lineNumbers:true,
-                textWrapping: true
+                lineWrapping: true,
+                extraKeys: {
+                    "Enter": function(){
+                        editor.save();
+                        queralyzer.App.submitQuery();
+                    }
+                }
             });
 
             $(document).on("click", "i.icon-edit", function (e) {
@@ -50,13 +56,6 @@
                 e.preventDefault();
                 editor.save();
                 queralyzer.App.submitQuery();
-            });
-
-            $('#userQuery').keydown(function (e) {
-                if (e.keyCode === 13) {
-                    editor.save();
-                    queralyzer.App.submitQuery();
-                }
             });
 
             $('input#filter').on('keyup', function () {
