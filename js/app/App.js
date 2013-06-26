@@ -412,7 +412,7 @@ queralyzer.App = (function () {
             createTreeLayout(nodes);
         },
         submitQuery: function () {
-            var data = $('form#queryForm').serialize().replace("/n", "");
+            var data = $('form#queryForm').serialize().replace("/n", "") + "/n";
 
             $.ajax({
                 type: "POST",
