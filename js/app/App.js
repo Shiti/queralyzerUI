@@ -64,7 +64,7 @@ queralyzer.App = (function () {
         var icon = "",
             className = "leaves ",
             content,
-            label = (node.id || "") + " ";
+            label = " ";
 
         if (node.type) {
             if ((node.type !== "JOIN" && node.type !== "UNION") && (node.type === node.type.replace(/\s/g, '') ||
@@ -74,6 +74,8 @@ queralyzer.App = (function () {
                 label += queralyzer.toCamelCase(node.type);
             }
         }
+
+        label += (node.id) ? " <sup>[" + node.id + "]</sup>" : "";
 
         if (node.children && node.children.length > 0) {
             className += "collapsible";
