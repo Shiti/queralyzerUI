@@ -1,0 +1,50 @@
+[
+    {
+        "Extra" : "Using where; Using temporary; Using filesort",
+        "id" : "1",
+        "key" : null,
+        "key_len" : null,
+        "possible_keys" : null,
+        "ref" : null,
+        "rows" : "1000",
+        "select_type" : "PRIMARY",
+        "table" : "<derived2>",
+        "type" : "ALL"
+    },
+    {
+        "Extra" : null,
+        "id" : "1",
+        "key" : "<auto_key0>",
+        "key_len" : "10",
+        "possible_keys" : "<auto_key0>",
+        "ref" : "T1.action_date,T1.campaign_id",
+        "rows" : "10",
+        "select_type" : "PRIMARY",
+        "table" : "<derived3>",
+        "type" : "ref"
+    },
+    {
+        "Extra" : "Using where; Using temporary; Using filesort",
+        "id" : "3",
+        "key" : null,
+        "key_len" : null,
+        "possible_keys" : null,
+        "ref" : null,
+        "rows" : "1000",
+        "select_type" : "DERIVED",
+        "table" : "T21",
+        "type" : "ALL"
+    },
+    {
+        "Extra" : "Using where",
+        "id" : "2",
+        "key" : null,
+        "key_len" : null,
+        "possible_keys" : null,
+        "ref" : null,
+        "rows" : "1000",
+        "select_type" : "DERIVED",
+        "table" : "T12",
+        "type" : "ALL"
+    }
+]

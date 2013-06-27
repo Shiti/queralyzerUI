@@ -104,7 +104,7 @@ queralyzer.App = (function () {
         }
     }
 
-    function removeExtraNodes(tree) {
+    function getActualTree(tree) {
         var child;
         if (tree.children) {
             child = tree.children;
@@ -115,13 +115,13 @@ queralyzer.App = (function () {
                 if ((!child[0].children) || (child[0].children.length === 0)) {
                     return tree.children;
                 }
-                return removeExtraNodes(tree.children[0]);
+                return getActualTree(tree.children[0]);
             }
         }
         return tree;
     }
 
-    function updateNode(node) {
+    function updateLastNode(node) {
         var child,
             id,
             grandChild;
@@ -139,63 +139,31 @@ queralyzer.App = (function () {
                 node = child;
             }
 
-        } else if (node.type === "Bookmark lookup") {
-            node = node.children[1];
         } else if (node.type === "Table scan" && node.children[0].type === "Table") {
             node = {type: node.children[0].table};
-        } else if (node.type === "Table scan") {
-            node = node.children[0];
         }
         node.id = id;
         return node;
     }
 
-    function updateFilesortNode(node) {
-        var child = node.children[0];
-        if (node.type === "Filesort") {
-            if (child.type === "TEMPORARY") {
-                return child.children[0];
-            }
-        }
-        return node;
-    }
-
-    function prettyPrint(tree) {
+    function update(tree) {
         var childNodes = [],
             updatedChild,
-            id = tree.id,
-            child;
+            id = tree.id;
 
-        tree = updateNode(tree);
+        tree = updateLastNode(tree);
 
-        if (tree.type === "Table scan") {
-            tree = tree.children[0];
-        }
         if (tree.children) {
 
             tree.children.forEach(function (child) {
-                if (child.type === "Bookmark lookup") {
-                    tree.type += " using bookmark lookup";
-                }
-                childNodes.push(updateNode(child));
+                childNodes.push(updateLastNode(child));
             });
             tree.children = childNodes;
-
-            if (tree.type === "Join buffer") {
-                child = tree.children[0];
-                if (child.type.match(/Filter on [A-Za-z0-9_]+/)) {
-                    tree = child;
-                }
-            }
-
-            if (tree.type === "DERIVED") {
-                tree = updateFilesortNode(tree.children[0]);
-            }
 
             if (tree.children) {
                 childNodes = [];
                 tree.children.forEach(function (child) {
-                    updatedChild = prettyPrint(child);
+                    updatedChild = update(child);
                     childNodes.push(updatedChild);
                 });
                 tree.children = childNodes;
@@ -208,24 +176,41 @@ queralyzer.App = (function () {
         return tree;
     }
 
-    function prettyPrintUnion(tree) {
-        var childNodes = [],
-            updatedChild,
+    function prettyPrint(tree) {
+        var children,
+            grandChild,
+            bookmarkType,
+            childNodes = [],
             id = tree.id;
-
         if (tree.children) {
-            childNodes = [];
-            tree.children.forEach(function (child) {
-                if (child.type === "UNION") {
-                    updatedChild = prettyPrintUnion(child);
-                } else {
-                    updatedChild = prettyPrint(child);
+            children = tree.children;
+            if (children.length === 1) {
+                if (tree.type === "Distinct/not-exists") {
+                    return tree;
                 }
-                childNodes.push(updatedChild);
+                if (children[0].id) {
+                    id = children[0].id;
+                }
+                tree = prettyPrint(children[0]);
+                tree.id = id;
+                return tree;
+            }
+            if (children[1].type === "Bookmark lookup") {
+                grandChild = children[1].children;
+                bookmarkType = grandChild.shift();
+                tree.type += " using bookmark lookup(" + bookmarkType.type + ")";
+            }
+
+            if (tree.type === "Bookmark lookup") {
+                tree = children[1];
+            }
+            children.forEach(function (child) {
+                childNodes.push(prettyPrint(child));
             });
             tree.children = childNodes;
+            tree.id = id;
+            return tree;
         }
-
         tree.id = id;
         return tree;
     }
@@ -384,17 +369,13 @@ queralyzer.App = (function () {
             tree = queralyzer.ExplainTree.generateTree(explainJsonData);
             treeDetails = {derived: 0, tableScan: 0, fileSort: 0};
 
-            if (actualJsonData.length > 1) {
-                cleanTree = removeExtraNodes(tree);
-                if (cleanTree.type === "UNION") {
-                    prettyPrintUnion(cleanTree);
-                } else {
-                    prettyPrint(cleanTree);
-                }
-            } else {
-                cleanTree = tree;
-            }
+            cleanTree = tree;
 
+            if (actualJsonData.length > 1) {
+                cleanTree = getActualTree(tree);
+                update(cleanTree);
+                prettyPrint(cleanTree);
+            }
             treeFunction = d3.layout.tree()
                 .value(function (d, i) {
                     return i;
