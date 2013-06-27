@@ -67,7 +67,12 @@ queralyzer.App = (function () {
             label = (node.id || "") + " ";
 
         if (node.type) {
-            label += queralyzer.toCamelCase(node.type);
+            if ((node.type !== "JOIN" && node.type !== "UNION") && (node.type === node.type.replace(/\s/g, '') ||
+                node.type.match(/Filter on/))) {
+                label += node.type;
+            } else {
+                label += queralyzer.toCamelCase(node.type);
+            }
         }
 
         if (node.children && node.children.length > 0) {
@@ -397,7 +402,7 @@ queralyzer.App = (function () {
             createTreeLayout(nodes);
         },
         submitQuery: function () {
-            var data = $('form#queryForm').serialize().replace(/%0D%0A/g, "");
+            var data = $('form#queryForm').serialize().replace(/%0D%0A/g, "+");
 
             $.ajax({
                 type: "POST",
