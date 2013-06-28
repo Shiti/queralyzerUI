@@ -67,7 +67,7 @@
                 queralyzer.App.reset();
             });
 
-            /*$.getJSON("data/access_plan_3.json", function (result) {
+            $.getJSON("data/access_plan_1.json", function (result) {
                 queralyzer.App.renderTree(result);
             });
 
@@ -77,7 +77,9 @@
 
             $.getJSON('data/indexMetaData.json', function (result) {
                 queralyzer.App.renderIndexMetaData(result);
-            });*/
+            });
+
+            $("#help").load("data/help.html");
         });
     </script>
 </head>
@@ -127,11 +129,14 @@
                     <ul class="nav nav-tabs">
                         <li class="active"><a href="#treeContainer" data-toggle="tab">Access Plan</a></li>
                         <li><a href="#rowContainer" data-toggle="tab">Explain Rows</a></li>
+                        <li><a href="#help" data-toggle="tab">Help</a></li>
                     </ul>
                     <div class="tab-content">
                         <div class="tab-pane active result" id="treeContainer">
                         </div>
                         <div class="tab-pane result" id="rowContainer">
+                        </div>
+                        <div class="tab-pane result" id="help">
                         </div>
                     </div>
                 </div>
