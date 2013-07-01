@@ -380,9 +380,11 @@ queralyzer.App = (function () {
 
             if (actualJsonData.length > 1) {
                 cleanTree = getActualTree(tree);
-                update(cleanTree);
-                prettyPrint(cleanTree);
             }
+
+            update(cleanTree);
+            prettyPrint(cleanTree);
+
             treeFunction = d3.layout.tree()
                 .value(function (d, i) {
                     return i;
@@ -506,7 +508,6 @@ queralyzer.App = (function () {
                 return regex.test($(this).text());
             }).show();
         }
-
     };
 
 })();
