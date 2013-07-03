@@ -15,6 +15,7 @@
 
     <script src="/codemirror/codemirror.js"></script>
     <script src="/codemirror/sql.js"></script>
+    <script src="/codemirror/placeholder.js"></script>
 
     <script src="js/app/TypeFactory.js" type="text/javascript"></script>
     <script src="js/app/ExplainTree.js" type="text/javascript"></script>
@@ -24,20 +25,25 @@
     <script type="text/javascript">
         $(function () {
 
-            $(".queryEditor").height(window.innerHeight*0.56+"px");
-            $(".metadata").height(window.innerHeight*0.32+"px");
-            $(".tree").height(window.innerHeight*0.9+"px");
-            $(".result").height(window.innerHeight*0.8+"px");
+            $(".queryEditor").height(window.innerHeight * 0.56 + "px");
+            $(".metadata").height(window.innerHeight * 0.32 + "px");
+            $(".tree").height(window.innerHeight * 0.9 + "px");
+            $(".result").height(window.innerHeight * 0.8 + "px");
 
-            var editor= CodeMirror.fromTextArea($("#userQuery")[0],{
-                mode:"text/x-mysql",
-                height:"100%",
-                lineNumbers:true,
+            var editor = CodeMirror.fromTextArea($("#userQuery")[0], {
+                mode: "text/x-mysql",
+                height: "100%",
+                lineNumbers: true,
                 lineWrapping: true,
                 extraKeys: {
-                    "Enter": function(){
-                        editor.save();
-                        queralyzer.App.submitQuery();
+                    "Enter": function () {
+                        if (queralyzer.App.isValidQuery(editor.getValue())){
+                            editor.save();
+                            queralyzer.App.submitQuery();
+                        }
+                      else {
+                            alert("Please check the query");
+                        }
                     }
                 }
             });
@@ -54,8 +60,13 @@
 
             $('#submitButton').click(function (e) {
                 e.preventDefault();
-                editor.save();
-                queralyzer.App.submitQuery();
+                if (queralyzer.App.isValidQuery(editor.getValue())){
+                    editor.save();
+                    queralyzer.App.submitQuery();
+                }
+                else {
+                    alert("Please check the query");
+                }
             });
 
             $('input#filter').on('keyup', function () {
@@ -63,11 +74,11 @@
                 queralyzer.App.filterRows(searchText);
             });
 
-            $("#reset").click(function(){
+            $("#reset").click(function () {
                 queralyzer.App.reset();
             });
 
-            $.getJSON("data/access_plan_1.json", function (result) {
+           /* $.getJSON("data/access_plan_1.json", function (result) {
                 queralyzer.App.renderTree(result);
             });
 
@@ -78,7 +89,7 @@
             $.getJSON('data/indexMetaData.json', function (result) {
                 queralyzer.App.renderIndexMetaData(result);
             });
-
+*/
             $("#help").load("data/help.html");
         });
     </script>
@@ -88,7 +99,7 @@
     <div class="headerWrapper">
         <img src="img/pramati.png" style="height:24px;float:left;">
         <a class="logo" href="index.html"></a>
-        <button id="reset" class="btn btn-primary pull-right" >Reset</button>
+        <button id="reset" class="btn btn-primary pull-right">Reset</button>
     </div>
 </header>
 <div class="container-fluid">
@@ -102,7 +113,7 @@
                                     class="icon-play icon-white"></i></button>
                         </legend>
                         <textarea id="userQuery" name="query" style="width:97%;word-wrap:break-word;"
-                                  placeholder="Enter your query here"></textarea>
+                                  placeholder="Explain select query with aliases and no wildcards for columns"></textarea>
                     </fieldset>
                 </form>
             </div>

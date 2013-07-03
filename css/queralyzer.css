@@ -96,3 +96,7 @@ a.collapsible {
 .tree {
     padding: 5px;
 }
+
+.CodeMirror pre.CodeMirror-placeholder {
+    color: #708090;
+}
