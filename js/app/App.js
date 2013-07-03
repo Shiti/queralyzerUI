@@ -510,19 +510,22 @@ queralyzer.App = (function () {
         },
         isValidQuery: function (query) {
             //DDL
-            var result = query.match(/CREATE|ALTER|DROP|TRUNCATE|COMMENT|RENAME/i);
+            var result = query.match(/\*/);
             if (!result) {
-                //DML
-                result = query.match(/INSERT|UPDATE|DELETE|CALL|LOCK TABLE|LOCK TABLES/i);
+                result = query.match(/CREATE|ALTER|DROP|TRUNCATE|COMMENT|RENAME/i);
                 if (!result) {
-                    //DCL
-                    result = query.match(/GRANT|REVOKE/i);
+                    //DML
+                    result = query.match(/INSERT|UPDATE|DELETE|CALL|LOCK TABLE|LOCK TABLES/i);
                     if (!result) {
-                        return true;
+                        //DCL
+                        result = query.match(/GRANT|REVOKE/i);
+                        if (!result) {
+                            return true;
+                        }
                     }
                 }
+                return false;
             }
-            return false;
         }
     };
 })();
