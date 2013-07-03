@@ -509,14 +509,11 @@ queralyzer.App = (function () {
             }).show();
         },
         isValidQuery: function (query) {
-            var result = query.match(/\*/);
-            if (!result) {
-                result = query.match(/CREATE|ALTER|DROP|TRUNCATE|COMMENT|RENAME|INSERT|UPDATE|DELETE|CALL|LOCK TABLE|LOCK TABLES|GRANT|REVOKE/i);
-                if (!result) {
-                    return true;
-                }
+            var regexp = /\*|CREATE|ALTER|DROP|TRUNCATE|COMMENT|RENAME|INSERT|UPDATE|DELETE|CALL|LOCK TABLE|LOCK TABLES|GRANT|REVOKE/i;
+            if (query.match(regexp)) {
                 return false;
             }
+            return false;
         }
     };
 })();
