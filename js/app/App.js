@@ -513,7 +513,7 @@ queralyzer.App = (function () {
             if (query.match(regexp)) {
                 return false;
             }
-            return false;
+            return true;
         }
     };
 })();
