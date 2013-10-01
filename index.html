@@ -37,11 +37,11 @@
                 lineWrapping: true,
                 extraKeys: {
                     "Enter": function () {
-                        if (queralyzer.App.isValidQuery(editor.getValue())){
+                        if (queralyzer.App.isValidQuery(editor.getValue())) {
                             editor.save();
                             queralyzer.App.submitQuery();
                         }
-                      else {
+                        else {
                             alert("Please check the query");
                         }
                     }
@@ -60,7 +60,7 @@
 
             $('#submitButton').click(function (e) {
                 e.preventDefault();
-                if (queralyzer.App.isValidQuery(editor.getValue())){
+                if (queralyzer.App.isValidQuery(editor.getValue())) {
                     editor.save();
                     queralyzer.App.submitQuery();
                 }
@@ -78,20 +78,28 @@
                 queralyzer.App.reset();
             });
 
-           /* $.getJSON("data/access_plan_1.json", function (result) {
-                queralyzer.App.renderTree(result);
+            $("#add-index-button").click(function (e) {
+                e.preventDefault();
+                queralyzer.App.hideIndexSelect();
+                $(this).attr("disabled", "disabled");
             });
 
-            $.getJSON('data/tableMetaData.json', function (result) {
-                queralyzer.App.renderTableMetaData(result);
-            });
+            /* $.getJSON("data/access_plan_1.json", function (result) {
+             queralyzer.App.renderTree(result);
+             });
 
-            $.getJSON('data/indexMetaData.json', function (result) {
-                queralyzer.App.renderIndexMetaData(result);
-            });
-*/
+             $.getJSON('data/tableMetaData.json', function (result) {
+             queralyzer.App.renderTableMetaData(result);
+             });
+
+             $.getJSON('data/indexMetaData.json', function (result) {
+             queralyzer.App.renderIndexMetaData(result);
+             });       */
+
             $("#help").load("data/help.html");
         });
+
+
     </script>
 </head>
 <body>
@@ -113,7 +121,7 @@
                                     class="icon-play icon-white"></i></button>
                         </legend>
                         <textarea id="userQuery" name="query" style="width:97%;word-wrap:break-word;"
-                                  placeholder="Explain select query with table-aliases and no wildcard(*) for columns"></textarea>
+                                  placeholder="select query with table-aliases and no wildcard(*) for columns"></textarea>
                     </fieldset>
                 </form>
             </div>
@@ -121,14 +129,21 @@
                 <div class="tabbable">
                     <ul class="nav nav-tabs">
                         <li class="active"><a href="#tableMetadata" data-toggle="tab">Tables</a></li>
-                        <li><a href="#indexMetadata" data-toggle="tab">Indexes</a></li>
+                        <li><a href="#indexTab" data-toggle="tab">Indexes</a></li>
                         <li class="pull-right" style="margin-right: 5px;"><input type="text" id="filter">&nbsp;<i
                                 class="icon-search"></i></li>
                     </ul>
                     <div class="tab-content">
                         <div class="tab-pane active" id="tableMetadata">
                         </div>
-                        <div class="tab-pane" id="indexMetadata">
+                        <div class="tab-pane" id="indexTab">
+                            <div style="overflow:hidden;">
+                                <a href="#indexModal" role="button" class="btn pull-right" data-toggle="modal"
+                                   onclick="queralyzer.App.initialiseAddIndexModal();">Add
+                                    Index</a>
+                            </div>
+                            <div id="indexMetadata">
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -153,6 +168,36 @@
                 </div>
             </div>
         </div>
+    </div>
+</div>
+<!-- Modal -->
+<div id="indexModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="indexModalLabel"
+     aria-hidden="true">
+    <div class="modal-header">
+        <h3 id="indexModalLabel">Adding index</h3>
+    </div>
+    <div class="modal-body">
+        <form>
+            Select Table: <select id="table-name-select"
+                                  onchange="queralyzer.App.addColumnNames(); queralyzer.App.addIndexNames();"></select><br>
+            Index Name: <select class="indexName" id="index-name-select"
+                                onchange="queralyzer.App.displayIndexData();"></select>
+            <input type="text" class="indexName" id="new-index-name" style="display:none">
+            <button id="add-index-button">Add</button>
+            <br>
+
+            <p>Primary key always takes the name 'PRIMARY KEY'</p>
+            Select column / s: <select id="column-name-select" multiple="multiple"></select><br>
+            Index Type:
+            <input type="radio" name="indexType" id="indexTypeHash" value="HASH">Hash
+            <input type="radio" name="indexType" id="indexTypeBtree" value="BTREE">Btree<br>
+            <input type="checkbox" id="isNullable" value="true" default="false">Nullable<br>
+            <input type="checkbox" id="nonUnique" value="true" default="false">Non Unique
+        </form>
+    </div>
+    <div class="modal-footer">
+        <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
+        <button class="btn btn-primary" onclick="queralyzer.App.updateIndexData();">Save changes</button>
     </div>
 </div>
 </body>
