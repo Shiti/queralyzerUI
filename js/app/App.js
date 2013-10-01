@@ -1,11 +1,12 @@
-/*global queralyzer,d3,$*/
+/*global queralyzer,d3,$,alert, document*/
 queralyzer.App = (function () {
 
     "use strict";
     var tableData,
         indexData,
         actualJsonData,
-        treeDetails = {};
+        treeDetails = {},
+        selectedIndexData;
 
     function tabulate(container, data, columns, isSearchable) {
         $(container).empty();
@@ -278,12 +279,18 @@ queralyzer.App = (function () {
 
     function updateTableMetaData(index, obj) {
         var selectedTable = tableData[index];
-        selectedTable.rowCount = obj.rows;
+        selectedTable.rowCount = parseInt(obj.rows, 10);
 
         $.ajax({
             type: "POST",
+            async: false,
             url: "/tablemetadata",
             data: encodeURI("tablemetadata=" + JSON.stringify(tableData)),
+            dataType: "json",
+            success: function (result) {
+                queralyzer.App.renderTree(result);
+                queralyzer.App.renderTableMetaData(tableData);
+            },
             error: function (e) {
                 alert(e.responseText);
             }
@@ -303,6 +310,7 @@ queralyzer.App = (function () {
             data: encodeURI("indexmetadata=" + JSON.stringify(indexData)),
             success: function (result) {
                 queralyzer.App.renderTree(result);
+                queralyzer.App.renderIndexMetaData(indexData);
             },
             error: function (e) {
                 alert(e.responseText);
@@ -310,28 +318,28 @@ queralyzer.App = (function () {
         });
     }
 
-    function logError(error) {
-        var errorLog = {
-            "title": "Found a bug",
-            "body": error
-        };
+    /*function logError(error) {
+     var errorLog = {
+     "title": "Found a bug",
+     "body": error
+     };
 
-        $.ajax({
-            type: 'POST',
-            url: 'https://github.com/repos/Shiti/queralyzerUI/issues',
-            data: JSON.stringify(errorLog),
-            xhrFields: {
-                withCredentials: true
-            },
-            crossDomain: true,
-            success: function () {
-                alert("Logged the issue");
-            },
-            error: function (e) {
-                console.log(e);
-            }
-        });
-    }
+     $.ajax({
+     type: 'POST',
+     url: 'https://github.com/repos/Shiti/queralyzerUI/issues',
+     data: JSON.stringify(errorLog),
+     xhrFields: {
+     withCredentials: true
+     },
+     crossDomain: true,
+     success: function () {
+     alert("Logged the issue");
+     },
+     error: function (e) {
+     console.log(e);
+     }
+     });
+     }      */
 
     return {
         renderTableMetaData: function (jsData) {
@@ -349,16 +357,17 @@ queralyzer.App = (function () {
         },
 
         renderIndexMetaData: function (jsData) {
-            var columns = ["table", "type", "columns", "cardinality", "action"],
+            var columns = ["table", "name", "columns", "type", "cardinality"],
                 data = [];
             indexData = jsData;
             jsData.forEach(function (d) {
                 var a = {};
                 a.table = d.tableName;
+                a.name = d.indexName;
                 a.type = d.indexType;
                 a.cardinality = d.cardinality;
                 a.columns = d.indexColumns;
-                a.action = "<i class='icon-edit'></i>";
+
                 data.push(a);
             });
             tabulate("#indexMetadata", data, columns, true);
@@ -514,6 +523,208 @@ queralyzer.App = (function () {
                 return false;
             }
             return true;
+        },
+        initialiseAddIndexModal: function () {
+            $("#add-index-button").removeAttr("disabled");
+            $('#index-name-select').css("display", 'inline');
+            $('#new-index-name').css("display", 'none');
+            selectedIndexData = null;
+            $('#table-name-select').empty();
+            $('#column-name-select').empty();
+            $('#index-name-select').empty();
+            queralyzer.App.addTableNames();
+            $('#indexTypeHash').prop('checked', false);
+            $('#indexTypeBtree').prop('checked', false);
+            $('#isNullable').prop('checked', false);
+            $('#nonUnique').prop('checked', false);
+            $('#new-index-name').prop('value', null);
+            selectedIndexData = null;
+
+        },
+        addTableNames: function () {
+            var tableSelect = document.getElementById("table-name-select"),
+                temp = tableData,
+                columnNames;
+            $('#table-name-select').empty();
+            $('#column-name-select').empty();
+            //tableSelect.empty();
+            $.each(tableData, function (index, value) {
+                //alert(tableData[index].tableName + ";");
+                var opt = document.createElement("option");
+                opt.text = tableData[index].tableName;
+                opt.value = tableData[index].tableName;
+
+                tableSelect.add(opt);
+            });
+            queralyzer.App.addColumnNames(0);
+            queralyzer.App.addIndexNames(0);
+            $('#index-name-select').prop("selectedIndex", -1);
+            /*
+             columnNames=tableData[0].tableColumns;
+             var columnSelect = document.getElementById("column-name-select");
+             $.each(columnNames, function (index, value) {
+             var opt = document.createElement("option");
+             //alert(columnNames[index]);
+             opt.text = columnNames[index];
+             opt.value = columnNames[index];
+             columnSelect.add(opt); // IE only
+             });*/
+
+        },
+        addColumnNames: function (tableId) {
+            var columnSelect = document.getElementById("column-name-select"),
+                tableSelected,
+                columnNames;
+            if (tableId !== null) {
+                tableSelected = tableData[tableId].tableName;
+            } else {
+                tableSelected = document.getElementById("table-name-select").value;
+            }
+
+            $('#column-name-select').empty();
+            $.each(tableData, function (index, value) {
+                //alert(tableData[index].tableName + ";");
+                if (tableData[index].tableName === tableSelected) {
+                    columnNames = tableData[index].tableColumns;
+                }
+                $('#column-name-select').empty();
+            });
+            $.each(columnNames, function (index, value) {
+                var opt = document.createElement("option");
+                //alert(columnNames[index]);
+                opt.text = columnNames[index];
+                opt.value = columnNames[index];
+                columnSelect.add(opt); // IE only
+            });
+        },
+        addIndexNames: function (tableId) {
+            var indexSelect = document.getElementById("index-name-select"),
+                tableSelected,
+                indexName;
+            if (tableId !== null) {
+                tableSelected = tableData[tableId].tableName;
+            } else {
+                tableSelected = document.getElementById("table-name-select").value;
+            }
+            $('#index-name-select').empty();
+
+            $.each(indexData, function (index, value) {
+                if (indexData[index].tableName === tableSelected) {
+                    indexName = indexData[index].indexName;
+                    var opt = document.createElement("option");
+                    //alert(columnNames[index]);
+                    opt.text = indexName;
+                    opt.value = indexName;
+                    indexSelect.add(opt); //Standard
+                    selectedIndexData = indexData[index];
+
+                }
+            });
+        },
+        resetIndexData: function () {
+            $('#column-name-select option:selected').prop('selected', false);
+            $('#indexTypeHash').prop('checked', false);
+            $('#indexTypeBtree').prop('checked', false);
+            $('#isNullable').prop('checked', false);
+            $('#nonUnique').prop('checked', false);
+            selectedIndexData = null;
+        },
+        displayIndexData: function () {
+            queralyzer.App.resetIndexData();
+            var columnSelect = document.getElementById("column-name-select"),
+                selectedIndex = $('#index-name-select').val(),
+                selectedTable = $('#table-name-select').val(),
+                tableColumnList = $('#column-name-select').val();
+
+            $.each(indexData, function (index, value) {
+                if ((indexData[index].tableName === selectedTable) && (indexData[index].indexName === selectedIndex)) {
+                    selectedIndexData = indexData[index];
+                    var columnsInIndex = indexData[index].indexColumns,
+                        k;
+                    //alert(columnsInIndex[k]);
+                    $('#column-name-select option').each(function (index) {
+                        //$(this).removeAttr("selected");
+
+                        for (k = 0; k < columnsInIndex.length; k++) {
+                            if (this.value === columnsInIndex[k]) {
+                                //alert(this.value);
+                                $(this).prop("selected", "selected");
+                                break;
+                            }
+                        }
+                    });
+
+                    if (indexData[index].indexType === 'HASH') {
+                        $('#indexTypeHash').prop('checked', true);
+                    } else if (indexData[index].indexType === 'BTREE') {
+                        $('#indexTypeBtree').prop('checked', true);
+                    }
+                    if (indexData[index].isNullable === true) {
+                        $('#isNullable').prop('checked', true);
+                    }
+                    if (indexData[index].nonUnique === true) {
+                        $('#nonUnique').prop('checked', true);
+                    }
+
+                }
+            });
+
+        },
+        updateIndexData: function () {
+            var tableSelected = $('#table-name-select').val(),
+                columnSelected = $('#column-name-select').val(),
+                indexTypeSelected = $('input[name=indexType]:checked').val(),
+                isNullableSelected = $('#isNullable').prop('checked'),
+                nonUniqueSelected = $('#nonUnique').prop('checked'),
+                indexSelected,
+                newIndexObj,
+                cols,
+                newIndexJsnText;
+            if ($('#new-index-name').val() !== "") {
+                indexSelected = $('#new-index-name').val();
+                cols = JSON.stringify(columnSelected.toString().split(","));
+                newIndexJsnText = '{"cardinality":2, "columnCount": ' + columnSelected.length +
+                    ', "indexColumns": ' + cols + ', "indexName": "' +
+                    indexSelected + '", "indexType": "' + indexTypeSelected +
+                    '","isNullable": ' + isNullableSelected + ', "nonUnique": ' + nonUniqueSelected +
+                    ', "schemaName":null, "storageEngine":null, "tableName":"' + tableSelected + '"}';
+                newIndexObj = JSON.parse(newIndexJsnText);
+                indexData.push(newIndexObj);
+
+            } else {
+                indexSelected = $('#index-name-select').val();
+                //updating the selected index.
+                selectedIndexData.isNullable = isNullableSelected;
+                selectedIndexData.nonUnique = nonUniqueSelected;
+                selectedIndexData.indexType = indexTypeSelected;
+                //alert(indexTypeSelected);
+                //alert(selectedIndexData.isNullable);
+                selectedIndexData.indexColumns = $('#column-name-select').val();
+                selectedIndexData.columnCount = selectedIndexData.indexColumns.length;
+                //alert(selectedIndexData.indexColumns);
+            }
+
+            //this.renderIndexMetaData(indexData);
+            $.ajax({
+                type: "POST",
+                async: "false",
+                url: "/indexmetadata",
+                data: encodeURI("indexmetadata=" + JSON.stringify(indexData)),
+                dataType: "json",
+                success: function (result) {
+                    this.renderTree(result);
+                    this.renderIndexMetaData(indexData);
+                },
+                error: function (e) {
+                    alert(e.responseText);
+                }
+            });
+            $('#indexModal').modal('hide');
+
+        },
+        hideIndexSelect: function () {
+            $('#index-name-select').css("display", 'none');
+            $('#new-index-name').css("display", 'inline');
         }
     };
 })();
