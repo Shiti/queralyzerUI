@@ -1,0 +1,26 @@
+[
+    {
+        "id": "1",
+        "select_type": "PRIMARY",
+        "table": "city",
+        "type": "range",
+        "possible_keys": "PRIMARY",
+        "key": "PRIMARY",
+        "key_len": "2",
+        "ref": null,
+        "rows": "6",
+        "Extra": "Using where; Using index"
+    },
+    {
+        "id": "2",
+        "select_type": "SUBQUERY",
+        "table": "city",
+        "type": "index",
+        "possible_keys": null,
+        "key": "idx_fk_country_id",
+        "key_len": "2",
+        "ref": null,
+        "rows": "754",
+        "Extra": "Using index"
+    }
+]

@@ -138,19 +138,30 @@ queralyzer.App = (function () {
         id = node.id;
         if (node.type === "Filter with WHERE") {
             child = node.children[0];
-            grandChild = node.children[0].children[0];
+            if(child.children){
+                grandChild = node.children[0].children[0];
+            }
             if (child.type === "Table scan" && grandChild.type === "Table") {
                 node = {
                     type: "Filter on " + grandChild.table,
                     title: "Using WHERE"
                 };
-            } else {
+            } else if(child.type==="Index range scan"){
+                       console.log(child);
+                position = child.key.indexOf("->");
+
+                node = {
+                    type: "Filter on " + child.key.substring(0, position) + "(" + child.key.substring(position + 2) + ")",
+                    title: "Using WHERE"
+                };
+
+            }else {
                 node = child;
             }
 
         } else if (node.type === "Table scan" && node.children[0].type === "Table") {
             node = {type: node.children[0].table};
-        } else if (node.type === "Index lookup"||node.type==="Index scan") {
+        } else if (node.type === "Index lookup"||node.type==="Index scan"||node.type === "Unique index lookup") {
             position = node.key.indexOf("->");
             node.children = [
                 {type: node.key.substring(0, position) + "(" + node.key.substring(position + 2) + ")"}
@@ -218,12 +229,19 @@ queralyzer.App = (function () {
             if(children[1] && children[1].type==="Index lookup"){
                 tree.type += " using index lookup";
             }
+            if(children[1] && children[1].type==="Unique index lookup"){
+                tree.type += " using unique index lookup";
+            }
 
             if (tree.type === "Bookmark lookup") {
                 tree = children[1];
             }
 
-            if(children[0] && children[0].type ==="Index scan" && children[1] && children[1].type ==="Index scan"){
+            if(tree.type === "Index lookup")   {
+                tree = children[1];
+            }
+
+            if(children[1] && children[1].type === "Index scan")   {
                 tree.type += " using index scan";
             }
 
@@ -549,7 +567,6 @@ queralyzer.App = (function () {
             selectedIndexData = null;
             $('#table-name-select').empty();
             $('#column-name-select').empty();
-            $('#column-name-select2').empty();
             $('#index-name-select').empty();
             queralyzer.App.addTableNames();
             $('#indexTypeHash').prop('checked', false);
@@ -558,8 +575,6 @@ queralyzer.App = (function () {
             $('#nonUnique').prop('checked', false);
             $('#new-index-name').prop('value', null);
             selectedIndexData = null;
-            // Myisam and Innodb supports only Btree index type, so let's make it default
-            $('#indexTypeBtree').prop('checked', true);
 
         },
         addTableNames: function () {
@@ -568,7 +583,6 @@ queralyzer.App = (function () {
                 columnNames;
             $('#table-name-select').empty();
             $('#column-name-select').empty();
-            $('#column-name-select2').empty();
             //tableSelect.empty();
             $.each(tableData, function (index, value) {
                 //alert(tableData[index].tableName + ";");
@@ -583,7 +597,7 @@ queralyzer.App = (function () {
             $('#index-name-select').prop("selectedIndex", -1);
             /*
              columnNames=tableData[0].tableColumns;
-             var columnSelect = document.getElementById("column-name-select2");
+             var columnSelect = document.getElementById("column-name-select");
              $.each(columnNames, function (index, value) {
              var opt = document.createElement("option");
              //alert(columnNames[index]);
@@ -597,7 +611,7 @@ queralyzer.App = (function () {
             var columnSelect = document.getElementById("column-name-select"),
                 tableSelected,
                 columnNames;
-            if (tableId !== undefined) {
+            if (tableId !== null) {
                 tableSelected = tableData[tableId].tableName;
             } else {
                 tableSelected = document.getElementById("table-name-select").value;
@@ -623,7 +637,7 @@ queralyzer.App = (function () {
             var indexSelect = document.getElementById("index-name-select"),
                 tableSelected,
                 indexName;
-            if (tableId !== undefined) {
+            if (tableId !== null) {
                 tableSelected = tableData[tableId].tableName;
             } else {
                 tableSelected = document.getElementById("table-name-select").value;
@@ -642,12 +656,9 @@ queralyzer.App = (function () {
 
                 }
             });
-            $('#index-name-select').prop("selectedIndex", -1);
-
         },
         resetIndexData: function () {
             $('#column-name-select option:selected').prop('selected', false);
-            $('#column-name-select2').empty();
             $('#indexTypeHash').prop('checked', false);
             $('#indexTypeBtree').prop('checked', false);
             $('#isNullable').prop('checked', false);
@@ -674,8 +685,6 @@ queralyzer.App = (function () {
                             if (this.value === columnsInIndex[k]) {
                                 //alert(this.value);
                                 $(this).prop("selected", "selected");
-                                //$('#column-name-select option:selected').remove().appendTo('#column-name-select2');
-
                                 break;
                             }
                         }
@@ -699,7 +708,7 @@ queralyzer.App = (function () {
         },
         updateIndexData: function () {
             var tableSelected = $('#table-name-select').val(),
-                columnSelected = $('#column-name-select2').val(),
+                columnSelected = $('#column-name-select').val(),
                 indexTypeSelected = $('input[name=indexType]:checked').val(),
                 isNullableSelected = $('#isNullable').prop('checked'),
                 nonUniqueSelected = $('#nonUnique').prop('checked'),
@@ -726,7 +735,7 @@ queralyzer.App = (function () {
                 selectedIndexData.indexType = indexTypeSelected;
                 //alert(indexTypeSelected);
                 //alert(selectedIndexData.isNullable);
-                selectedIndexData.indexColumns = $('#column-name-select2').val();
+                selectedIndexData.indexColumns = $('#column-name-select').val();
                 selectedIndexData.columnCount = selectedIndexData.indexColumns.length;
                 //alert(selectedIndexData.indexColumns);
             }
