@@ -1,0 +1,14 @@
+[
+    {
+        "id": "1",
+        "select_type": "SIMPLE",
+        "table": "film_actor",
+        "type": "index",
+        "possible_keys": null,
+        "key": "PRIMARY",
+        "key_len": "4",
+        "ref": null,
+        "rows": "5906",
+        "Extra": "Using index"
+    }
+]

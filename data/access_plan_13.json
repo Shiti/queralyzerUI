@@ -1,0 +1,38 @@
+[
+    {
+        "id": "1",
+        "select_type": "PRIMARY",
+        "table": "film_actor",
+        "type": "ref",
+        "possible_keys": "PRIMARY",
+        "key": "PRIMARY",
+        "key_len": "2",
+        "ref": "const",
+        "rows": "19",
+        "Extra": "Using index"
+    },
+    {
+        "id": "2",
+        "select_type": "UNION",
+        "table": "film_actor",
+        "type": "ref",
+        "possible_keys": "PRIMARY,idx_fk_film_id",
+        "key": "idx_fk_film_id",
+        "key_len": "2",
+        "ref": "const",
+        "rows": "10",
+        "Extra": "Using where; Using index"
+    },
+    {
+        "id": "NULL",
+        "select_type": "UNION RESULT",
+        "table": "<union1,2>",
+        "type": "ALL",
+        "possible_keys": null,
+        "key": null,
+        "key_len": null,
+        "ref": null,
+        "rows": "NULL",
+        "Extra": null
+    }
+]
