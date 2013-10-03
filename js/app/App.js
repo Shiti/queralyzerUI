@@ -148,12 +148,10 @@ queralyzer.App = (function () {
                 };
             } else if (child.type === "Index range scan") {
                 position = child.key.indexOf("->");
-
                 node = {
                     type: "Filter on " + child.key.substring(0, position) + "(" + child.key.substring(position + 2) + ")",
                     title: "Using WHERE"
                 };
-
             } else {
                 node = child;
             }
@@ -199,7 +197,6 @@ queralyzer.App = (function () {
         tree.id = id;
         return tree;
     }
-
     
     function prettyPrint(tree) {
         var children,
@@ -254,6 +251,7 @@ queralyzer.App = (function () {
         tree.id = id;
         return tree;
     }
+    
     function analyze(tree) {
         if (tree.type === "DERIVED") {
             treeDetails.derived += 1;
