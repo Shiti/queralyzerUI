@@ -97,6 +97,14 @@
              });       */
 
             $("#help").load("data/help.html");
+            $().ready(function () {
+                $('#addColumns').click(function () {
+                    return !$('#column-name-select option:selected').remove().appendTo('#column-name-select2');
+                });
+                $('#removeColumns').click(function () {
+                    return !$('#column-name-select2 option:selected').remove().appendTo('#column-name-select');
+                });
+            });
         });
 
 
@@ -187,7 +195,16 @@
             <br>
 
             <p>Primary key always takes the name 'PRIMARY KEY'</p>
-            Select column / s: <select id="column-name-select" multiple="multiple"></select><br>
+
+            Select column / s:
+            <div>
+                <select id="column-name-select" multiple="multiple"></select>
+                <a href="#" id="addColumns">add</a>
+            </div>
+            <div>
+                <select id="column-name-select2" multiple="multiple"></select>
+                <a href="#" id="removeColumns">remove</a>
+            </div>
             Index Type:
             <input type="radio" name="indexType" id="indexTypeHash" value="HASH">Hash
             <input type="radio" name="indexType" id="indexTypeBtree" value="BTREE">Btree<br>

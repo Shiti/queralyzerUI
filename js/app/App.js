@@ -531,6 +531,7 @@ queralyzer.App = (function () {
             selectedIndexData = null;
             $('#table-name-select').empty();
             $('#column-name-select').empty();
+            $('#column-name-select2').empty();
             $('#index-name-select').empty();
             queralyzer.App.addTableNames();
             $('#indexTypeHash').prop('checked', false);
@@ -539,6 +540,8 @@ queralyzer.App = (function () {
             $('#nonUnique').prop('checked', false);
             $('#new-index-name').prop('value', null);
             selectedIndexData = null;
+            // Myisam and Innodb supports only Btree index type, so let's make it default
+            $('#indexTypeBtree').prop('checked', true);
 
         },
         addTableNames: function () {
@@ -547,6 +550,7 @@ queralyzer.App = (function () {
                 columnNames;
             $('#table-name-select').empty();
             $('#column-name-select').empty();
+            $('#column-name-select2').empty();
             //tableSelect.empty();
             $.each(tableData, function (index, value) {
                 //alert(tableData[index].tableName + ";");
@@ -561,7 +565,7 @@ queralyzer.App = (function () {
             $('#index-name-select').prop("selectedIndex", -1);
             /*
              columnNames=tableData[0].tableColumns;
-             var columnSelect = document.getElementById("column-name-select");
+             var columnSelect = document.getElementById("column-name-select2");
              $.each(columnNames, function (index, value) {
              var opt = document.createElement("option");
              //alert(columnNames[index]);
@@ -575,7 +579,7 @@ queralyzer.App = (function () {
             var columnSelect = document.getElementById("column-name-select"),
                 tableSelected,
                 columnNames;
-            if (tableId !== null) {
+            if (tableId !== undefined) {
                 tableSelected = tableData[tableId].tableName;
             } else {
                 tableSelected = document.getElementById("table-name-select").value;
@@ -601,7 +605,7 @@ queralyzer.App = (function () {
             var indexSelect = document.getElementById("index-name-select"),
                 tableSelected,
                 indexName;
-            if (tableId !== null) {
+            if (tableId !== undefined) {
                 tableSelected = tableData[tableId].tableName;
             } else {
                 tableSelected = document.getElementById("table-name-select").value;
@@ -620,9 +624,12 @@ queralyzer.App = (function () {
 
                 }
             });
+            $('#index-name-select').prop("selectedIndex", -1);
+
         },
         resetIndexData: function () {
             $('#column-name-select option:selected').prop('selected', false);
+            $('#column-name-select2').empty();
             $('#indexTypeHash').prop('checked', false);
             $('#indexTypeBtree').prop('checked', false);
             $('#isNullable').prop('checked', false);
@@ -649,6 +656,8 @@ queralyzer.App = (function () {
                             if (this.value === columnsInIndex[k]) {
                                 //alert(this.value);
                                 $(this).prop("selected", "selected");
+                                //$('#column-name-select option:selected').remove().appendTo('#column-name-select2');
+
                                 break;
                             }
                         }
@@ -672,7 +681,7 @@ queralyzer.App = (function () {
         },
         updateIndexData: function () {
             var tableSelected = $('#table-name-select').val(),
-                columnSelected = $('#column-name-select').val(),
+                columnSelected = $('#column-name-select2').val(),
                 indexTypeSelected = $('input[name=indexType]:checked').val(),
                 isNullableSelected = $('#isNullable').prop('checked'),
                 nonUniqueSelected = $('#nonUnique').prop('checked'),
@@ -699,7 +708,7 @@ queralyzer.App = (function () {
                 selectedIndexData.indexType = indexTypeSelected;
                 //alert(indexTypeSelected);
                 //alert(selectedIndexData.isNullable);
-                selectedIndexData.indexColumns = $('#column-name-select').val();
+                selectedIndexData.indexColumns = $('#column-name-select2').val();
                 selectedIndexData.columnCount = selectedIndexData.indexColumns.length;
                 //alert(selectedIndexData.indexColumns);
             }
@@ -712,8 +721,8 @@ queralyzer.App = (function () {
                 data: encodeURI("indexmetadata=" + JSON.stringify(indexData)),
                 dataType: "json",
                 success: function (result) {
-                    this.renderTree(result);
-                    this.renderIndexMetaData(indexData);
+                    queralyzer.App.renderTree(result);
+                    queralyzer.App.renderIndexMetaData(indexData);
                 },
                 error: function (e) {
                     alert(e.responseText);
