@@ -1,0 +1,86 @@
+[
+    {
+        "id": "1",
+        "select_type": "PRIMARY",
+        "table": "a",
+        "type": "ALL",
+        "possible_keys": null,
+        "key": null,
+        "key_len": null,
+        "ref": null,
+        "rows": "200",
+        "Extra": "Using filesort"
+    },
+    {
+        "id": "1",
+        "select_type": "PRIMARY",
+        "table": "fa",
+        "type": "ref",
+        "possible_keys": "PRIMARY",
+        "key": "PRIMARY",
+        "key_len": "2",
+        "ref": "sakila.a.actor_id",
+        "rows": "1",
+        "Extra": "Using index"
+    },
+    {
+        "id": "1",
+        "select_type": "PRIMARY",
+        "table": "fc",
+        "type": "ref",
+        "possible_keys": "PRIMARY",
+        "key": "PRIMARY",
+        "key_len": "2",
+        "ref": "sakila.fa.film_id",
+        "rows": "1",
+        "Extra": "Using index"
+    },
+    {
+        "id": "1",
+        "select_type": "PRIMARY",
+        "table": "c",
+        "type": "eq_ref",
+        "possible_keys": "PRIMARY",
+        "key": "PRIMARY",
+        "key_len": "1",
+        "ref": "sakila.fc.category_id",
+        "rows": "1",
+        "Extra": null
+    },
+    {
+        "id": "2",
+        "select_type": "DEPENDENT SUBQUERY",
+        "table": "fc_1",
+        "type": "ref",
+        "possible_keys": "PRIMARY,fk_film_category_category",
+        "key": "fk_film_category_category",
+        "key_len": "1",
+        "ref": "sakila.c.category_id",
+        "rows": "1",
+        "Extra": "Using index"
+    },
+    {
+        "id": "2",
+        "select_type": "DEPENDENT SUBQUERY",
+        "table": "f_1",
+        "type": "eq_ref",
+        "possible_keys": "PRIMARY",
+        "key": "PRIMARY",
+        "key_len": "2",
+        "ref": "sakila.fc_1.film_id",
+        "rows": "1",
+        "Extra": null
+    },
+    {
+        "id": "2",
+        "select_type": "DEPENDENT SUBQUERY",
+        "table": "fa_1",
+        "type": "eq_ref",
+        "possible_keys": "PRIMARY,idx_fk_film_id",
+        "key": "PRIMARY",
+        "key_len": "4",
+        "ref": "sakila.a.actor_id,sakila.fc_1.film_id",
+        "rows": "1",
+        "Extra": "Using index"
+    }
+]
