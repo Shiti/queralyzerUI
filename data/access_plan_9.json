@@ -1,0 +1,38 @@
+[
+    {
+        "Extra": "Using index",
+        "id": "1",
+        "key": "PRIMARY",
+        "key_len": "4",
+        "possible_keys": null,
+        "ref": null,
+        "rows": "2",
+        "select_type": "PRIMARY",
+        "table": "actor_1",
+        "type": "index"
+    },
+    {
+        "Extra": "Using index",
+        "id": "2",
+        "key": "PRIMARY",
+        "key_len": "4",
+        "possible_keys": null,
+        "ref": null,
+        "rows": "2",
+        "select_type": "UNION",
+        "table": "actor_2",
+        "type": "index"
+    },
+    {
+        "Extra": "Using temporary",
+        "id": null,
+        "key": null,
+        "key_len": null,
+        "possible_keys": null,
+        "ref": null,
+        "rows": "NULL",
+        "select_type": "UNION RESULT",
+        "table": "<union1,2>",
+        "type": "ALL"
+    }
+]

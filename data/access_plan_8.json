@@ -1,0 +1,39 @@
+[
+    {
+        "Extra": null,
+        "id": "1",
+        "key": null,
+        "key_len": null,
+        "possible_keys": "PRIMARY",
+        "ref": null,
+        "rows": "200",
+        "select_type": "SIMPLE",
+        "table": "a",
+        "type": "ALL"
+    },
+    {
+        "Extra": "Using index",
+        "id": "1",
+        "key": "PRIMARY",
+        "key_len": "2",
+        "possible_keys": "PRIMARY,idx_fk_film_id",
+        "ref": "sakila.a.actor_id",
+        "rows": "13",
+        "select_type": "SIMPLE",
+        "table": "fa",
+        "type": "ref"
+    },
+    {
+        "Extra": null,
+        "id": "1",
+        "key": "PRIMARY",
+        "key_len": "2",
+        "possible_keys": "PRIMARY",
+        "ref": "sakila.fa.idx_fk_film_id",
+        "rows": "1",
+        "select_type": "SIMPLE",
+        "table": "f",
+        "type": "eq_ref"
+    }
+]
+

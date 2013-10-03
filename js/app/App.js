@@ -132,6 +132,7 @@ queralyzer.App = (function () {
     function updateLastNode(node) {
         var child,
             id,
+            position = 0,
             grandChild;
 
         id = node.id;
@@ -149,6 +150,11 @@ queralyzer.App = (function () {
 
         } else if (node.type === "Table scan" && node.children[0].type === "Table") {
             node = {type: node.children[0].table};
+        } else if (node.type === "Index lookup"||node.type==="Index scan") {
+            position = node.key.indexOf("->");
+            node.children = [
+                {type: node.key.substring(0, position) + "(" + node.key.substring(position + 2) + ")"}
+            ];
         }
         node.id = id;
         return node;
@@ -203,21 +209,33 @@ queralyzer.App = (function () {
                 tree.id = id;
                 return tree;
             }
-            if (children[1].type === "Bookmark lookup") {
+            if (children[1] && children[1].type === "Bookmark lookup") {
                 grandChild = children[1].children;
                 bookmarkType = grandChild.shift();
                 tree.type += " using bookmark lookup(" + bookmarkType.type + ")";
             }
 
+            if(children[1] && children[1].type==="Index lookup"){
+                tree.type += " using index lookup";
+            }
+
             if (tree.type === "Bookmark lookup") {
                 tree = children[1];
             }
+
+            if(children[0] && children[0].type ==="Index scan" && children[1] && children[1].type ==="Index scan"){
+                tree.type += " using index scan";
+            }
+
             children.forEach(function (child) {
                 childNodes.push(prettyPrint(child));
             });
             tree.children = childNodes;
             tree.id = id;
             return tree;
+        }
+        else if (tree.type === "Table") {
+            tree.type = tree.table;
         }
         tree.id = id;
         return tree;
@@ -712,8 +730,8 @@ queralyzer.App = (function () {
                 data: encodeURI("indexmetadata=" + JSON.stringify(indexData)),
                 dataType: "json",
                 success: function (result) {
-                    this.renderTree(result);
-                    this.renderIndexMetaData(indexData);
+                    queralyzer.App.renderTree(result);
+                    queralyzer.App.renderIndexMetaData(indexData);
                 },
                 error: function (e) {
                     alert(e.responseText);
