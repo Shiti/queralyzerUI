@@ -138,10 +138,18 @@ queralyzer.App = (function () {
         id = node.id;
         if (node.type === "Filter with WHERE") {
             child = node.children[0];
-            grandChild = node.children[0].children[0];
+            if (child.children) {
+                grandChild = node.children[0].children[0];
+            }
             if (child.type === "Table scan" && grandChild.type === "Table") {
                 node = {
                     type: "Filter on " + grandChild.table,
+                    title: "Using WHERE"
+                };
+            } else if (child.type === "Index range scan") {
+                position = child.key.indexOf("->");
+                node = {
+                    type: "Filter on " + child.key.substring(0, position) + "(" + child.key.substring(position + 2) + ")",
                     title: "Using WHERE"
                 };
             } else {
@@ -150,7 +158,7 @@ queralyzer.App = (function () {
 
         } else if (node.type === "Table scan" && node.children[0].type === "Table") {
             node = {type: node.children[0].table};
-        } else if (node.type === "Index lookup"||node.type==="Index scan") {
+        } else if (node.type === "Index lookup" || node.type === "Index scan" || node.type === "Unique index lookup") {
             position = node.key.indexOf("->");
             node.children = [
                 {type: node.key.substring(0, position) + "(" + node.key.substring(position + 2) + ")"}
@@ -215,16 +223,21 @@ queralyzer.App = (function () {
                 tree.type += " using bookmark lookup(" + bookmarkType.type + ")";
             }
 
-            if(children[1] && children[1].type==="Index lookup"){
+            if (children[1] && children[1].type === "Index lookup") {
                 tree.type += " using index lookup";
             }
+            if (children[1] && children[1].type === "Unique index lookup") {
+                tree.type += " using unique index lookup";
+            }
 
-            if (tree.type === "Bookmark lookup") {
+            if (tree.type === "Bookmark lookup" || tree.type === "Index lookup") {
                 tree = children[1];
             }
 
-            if(children[0] && children[0].type ==="Index scan" && children[1] && children[1].type ==="Index scan"){
-                tree.type += " using index scan";
+            if (children[0] && children[0].type === "Index scan" || children[1] && children[1].type === "Index scan") {
+                if (tree.type.indexOf(" using index scan") === -1) {
+                    tree.type += " using index scan";
+                }
             }
 
             children.forEach(function (child) {
