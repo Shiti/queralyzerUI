@@ -224,11 +224,8 @@ queralyzer.App = (function () {
                  tree.type += " using bookmark lookup(" + bookmarkType.type + ")";*/
             }
 
-            if (children[1] && children[1].type === "Index lookup") {
-                tree.type += " using index lookup";
-            }
-            if (children[1] && children[1].type === "Unique index lookup") {
-                tree.type += " using unique index lookup";
+            if (children[1] && (children[1].type === "Index lookup"||children[1].type === "Unique index lookup")) {
+                tree.type += " using index";
             }
 
             if (tree.type === "Bookmark lookup" || tree.type === "Index lookup") {
