@@ -197,7 +197,7 @@ queralyzer.App = (function () {
         tree.id = id;
         return tree;
     }
-    
+
     function prettyPrint(tree) {
         var children,
             grandChild,
@@ -234,8 +234,10 @@ queralyzer.App = (function () {
                 tree = children[1];
             }
 
-            if (children[0] && children[0].type === "Index scan" && children[1] && children[1].type === "Index scan") {
-                tree.type += " using index scan";
+            if (children[0] && children[0].type === "Index scan" || children[1] && children[1].type === "Index scan") {
+                if (tree.type.indexOf(" using index scan") === -1) {
+                    tree.type += " using index scan";
+                }
             }
 
             children.forEach(function (child) {
@@ -251,7 +253,7 @@ queralyzer.App = (function () {
         tree.id = id;
         return tree;
     }
-    
+
     function analyze(tree) {
         if (tree.type === "DERIVED") {
             treeDetails.derived += 1;
