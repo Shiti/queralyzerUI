@@ -220,7 +220,8 @@ queralyzer.App = (function () {
             if (children[1] && children[1].type === "Bookmark lookup") {
                 grandChild = children[1].children;
                 bookmarkType = grandChild.shift();
-                tree.type += " using bookmark lookup(" + bookmarkType.type + ")";
+                /*            excluding displaying bookmark lookup
+                 tree.type += " using bookmark lookup(" + bookmarkType.type + ")";*/
             }
 
             if (children[1] && children[1].type === "Index lookup") {
