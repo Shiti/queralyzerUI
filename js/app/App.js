@@ -163,7 +163,7 @@ queralyzer.App = (function () {
             node.children = [
                 {type: node.key.substring(0, position) + "(" + node.key.substring(position + 2) + ")"}
             ];
-        }else if (node.type === "Bookmark lookup" && node.children[0].type === "Constant index lookup") {
+        } else if (node.type === "Bookmark lookup" && node.children[0].type === "Constant index lookup") {
             position = node.children[0].key.indexOf("->");
             tableName = node.children[0].key.substring(0, position);
             if (tableName === node.children[1].table) {
@@ -233,7 +233,7 @@ queralyzer.App = (function () {
                  tree.type += " using bookmark lookup(" + bookmarkType.type + ")";*/
             }
 
-            if (children[1] && (children[1].type === "Index lookup"||children[1].type === "Unique index lookup")) {
+            if (children[1] && (children[1].type === "Index lookup" || children[1].type === "Unique index lookup")) {
                 tree.type += " using index";
             }
 
@@ -241,7 +241,7 @@ queralyzer.App = (function () {
                 tree = children[1];
             }
 
-            if (children[0] && children[0].type === "Index scan" || children[1] && children[1].type === "Index scan") {
+            if ((children[0] && children[0].type === "Index scan") || (children[1] && children[1].type === "Index scan")) {
                 if (tree.type.indexOf(" using index scan") === -1) {
                     tree.type += " using index scan";
                 }
@@ -253,8 +253,7 @@ queralyzer.App = (function () {
             tree.children = childNodes;
             tree.id = id;
             return tree;
-        }
-        else if (tree.type === "Table") {
+        } else if (tree.type === "Table") {
             tree.type = tree.table;
         }
         tree.id = id;
