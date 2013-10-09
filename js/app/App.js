@@ -136,7 +136,9 @@ queralyzer.App = (function () {
             grandChild,
             tableName;
         id = node.id;
+
         if (node.type === "Filter with WHERE") {
+
             child = node.children[0];
             if (child.children) {
                 grandChild = node.children[0].children[0];
@@ -163,7 +165,7 @@ queralyzer.App = (function () {
             node.children = [
                 {type: node.key.substring(0, position) + "(" + node.key.substring(position + 2) + ")"}
             ];
-        } else if (node.type === "Bookmark lookup" && node.children[0].type === "Constant index lookup") {
+        } else if ((node.type === "Bookmark lookup" && node.children[0].type === "Constant index lookup")) {
             position = node.children[0].key.indexOf("->");
             tableName = node.children[0].key.substring(0, position);
             if (tableName === node.children[1].table) {
@@ -172,6 +174,9 @@ queralyzer.App = (function () {
             node.children = [
                 {type: node.key.substring(0, position) + "(" + node.key.substring(position + 2) + ")"}
             ];
+        } else if ((node.type === "Bookmark lookup" && node.children[0].type === "Index lookup")) {
+            position = node.children[0].key.indexOf("->");
+            node.children[0].type = node.children[0].key.substring(0, position) + "(" + node.children[0].key.substring(position + 2) + ")";
         }
         node.id = id;
         return node;
@@ -237,10 +242,18 @@ queralyzer.App = (function () {
                 tree.type += " using index";
             }
 
-            if (tree.type === "Bookmark lookup" || tree.type === "Index lookup") {
+            if ((tree.type === "Bookmark lookup" && tree.children[1].type !== "Table") || tree.type === "Index lookup") {
                 tree = children[1];
             }
 
+            if (tree.type === "Bookmark lookup" && tree.children[1].type === "Table") {
+                tree.type = "Query using index";
+                var position = tree.children[0].key.indexOf("->");
+                var tableName = tree.children[0].key.substring(0, position);
+                if (tableName === tree.children[1].table) {
+                    tree.children.pop();
+                }
+            }
             if ((children[0] && children[0].type === "Index scan") || (children[1] && children[1].type === "Index scan")) {
                 if (tree.type.indexOf(" using index scan") === -1) {
                     tree.type += " using index scan";
@@ -256,7 +269,9 @@ queralyzer.App = (function () {
         } else if (tree.type === "Table") {
             tree.type = tree.table;
         }
-        tree.id = id;
+        if (id !== undefined) {
+            tree.id = id;
+        }
         return tree;
     }
 
