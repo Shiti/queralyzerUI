@@ -136,9 +136,7 @@ queralyzer.App = (function () {
             grandChild,
             tableName;
         id = node.id;
-
         if (node.type === "Filter with WHERE") {
-
             child = node.children[0];
             if (child.children) {
                 grandChild = node.children[0].children[0];
