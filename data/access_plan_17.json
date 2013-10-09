@@ -1,0 +1,14 @@
+[
+    {
+        "Extra": null,
+        "id": "1",
+        "key": "a_i1",
+        "key_len": "5",
+        "possible_keys": "a_i1",
+        "ref": "const",
+        "rows": "10",
+        "select_type": "SIMPLE",
+        "table": "a",
+        "type": "ref"
+    }
+]
