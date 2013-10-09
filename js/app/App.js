@@ -269,7 +269,7 @@ queralyzer.App = (function () {
         } else if (tree.type === "Table") {
             tree.type = tree.table;
         }
-            tree.id = id;
+        tree.id = id;
         return tree;
     }
 
