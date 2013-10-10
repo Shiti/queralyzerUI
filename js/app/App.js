@@ -215,6 +215,8 @@ queralyzer.App = (function () {
             grandChild,
             bookmarkType,
             childNodes = [],
+            position,
+            tableName,
             id = tree.id;
         if (tree.children) {
             children = tree.children;
@@ -230,10 +232,21 @@ queralyzer.App = (function () {
                 return tree;
             }
             if (children[1] && children[1].type === "Bookmark lookup") {
-                grandChild = children[1].children;
-                bookmarkType = grandChild.shift();
-                /*            excluding displaying bookmark lookup
-                 tree.type += " using bookmark lookup(" + bookmarkType.type + ")";*/
+                if (children[1].children[1].type !== "Table") {
+                    grandChild = children[1].children;
+                    bookmarkType = grandChild.shift();
+                    /*            excluding displaying bookmark lookup
+                     tree.type += " using bookmark lookup(" + bookmarkType.type + ")";*/
+                } else if (children[1].children.length === 2) {
+                    if (children[1].children[1].type === "Table") {
+                        children[1].type = "Query using index";
+                        position = children[1].children[0].key.indexOf("->");
+                        tableName = children[1].children[0].key.substring(0, position);
+                        if (tableName === children[1].children[1].table) {
+                            children[1].children.pop();
+                        }
+                    }
+                }
             }
 
             if (children[1] && (children[1].type === "Index lookup" || children[1].type === "Unique index lookup")) {
@@ -246,8 +259,8 @@ queralyzer.App = (function () {
 
             if (tree.type === "Bookmark lookup" && tree.children[1].type === "Table") {
                 tree.type = "Query using index";
-                var position = tree.children[0].key.indexOf("->");
-                var tableName = tree.children[0].key.substring(0, position);
+                position = tree.children[0].key.indexOf("->");
+                tableName = tree.children[0].key.substring(0, position);
                 if (tableName === tree.children[1].table) {
                     tree.children.pop();
                 }
