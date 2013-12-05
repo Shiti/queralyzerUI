@@ -8,6 +8,7 @@ queralyzer.App = (function () {
         treeDetails = {},
         selectedIndexData;
 
+
     function tabulate(container, data, columns, isSearchable) {
         $(container).empty();
 
@@ -327,6 +328,7 @@ queralyzer.App = (function () {
             success: function (result) {
                 queralyzer.App.renderTree(result);
                 queralyzer.App.renderTableMetaData(tableData);
+                queralyzer.App.createExplainTree();
             },
             error: function (e) {
                 alert(e.responseText);
@@ -348,6 +350,8 @@ queralyzer.App = (function () {
             success: function (result) {
                 queralyzer.App.renderTree(result);
                 queralyzer.App.renderIndexMetaData(indexData);
+                queralyzer.App.createExplainTree();
+
             },
             error: function (e) {
                 alert(e.responseText);
@@ -377,6 +381,269 @@ queralyzer.App = (function () {
      }
      });
      }      */
+    function createExplainTreeLayout(tree_in_json) {
+        $("#explainTreeContainer").empty();
+        var margin = {top: 20, right: 20, bottom: 20, left: 20},
+            width = 2400 - margin.right - margin.left,
+            height = 2400 - margin.top - margin.bottom;
+
+        var i = 0,
+            duration = 750,
+            root;
+
+        var tree = d3.layout.tree()
+            .size([height, width]);
+
+        var diagonal = d3.svg.diagonal()
+            .projection(function (d) {
+                return [d.x, d.y];
+            });
+
+        root = tree_in_json;
+        root.x0 = 100;
+        root.y0 = width / 2;
+
+        // set id and update children information for TableTreeNode
+        var nodes = tree.nodes(root);
+        var j = 0;
+        nodes.forEach(function (d) {
+            d.id = j++;
+        });
+        var svg = d3.select("#explainTreeContainer").append("svg")
+            .attr("width", width + margin.right + margin.left)
+            .attr("height", height + margin.top + margin.bottom)
+            .append("g")
+            .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+            .attr("class", "explainTreeContainer");
+
+        //console.log(root);
+        /*function collapse(d) {
+         if (d.children) {
+         d._children = d.children;
+         d._children.forEach(collapse);
+         d.children = null;
+         }
+         }
+         root.children.forEach(collapse);
+         */
+
+        //update([root], 0);
+
+        update2(root);
+        d3.select(self.frameElement).style("height", "2400px");
+        /*
+         function update(root, root_id) {
+         var node,
+         name = "node" + (root_id);
+         if (root_id === undefined) {
+         return;
+         }
+         //console.log(name);
+         if (root[0].data) {
+         var elem = d3.select("#" + name);
+         if (elem !== null) {
+         node = elem.selectAll("div")
+         .data(root[0].children)
+         .enter()
+         .append("div")
+         .attr("class", function (d) {
+         if (d.type === "TreeNode") {
+         return "lightBlueBox";
+         }
+         else if (d.type === "TableTreeNode") {
+         return "lightMaroonBox";
+         }
+         })
+         .attr("id", function (d) {
+         return "node" + (d.id);
+         })
+         .attr("type", function (d) {
+         console.log(d.type);
+         return d.type || "dummyClass";
+
+         })
+         .append("span")
+         .text(function (d) {
+         console.log(d.name);
+         return (d.name + "\n") || "dummy";
+         });
+         }
+         }
+         //.style("float","left")
+         for (i in root[0].children) {
+
+         update([root[0].children[i]], root[0].children[i].id);
+         }
+         };
+         */
+        function update2(source) {
+            // Compute the new tree layout.
+            var nodes = tree.nodes(root),
+                links = tree.links(nodes);
+
+            //Normalize for fixed-depth.
+            nodes.forEach(function (d) {
+                d.y = d.depth * 100;
+            });
+            var node = svg.selectAll("g.node")
+                .data(nodes);
+            // Enter any new nodes at the parent's previous position.
+            var nodeEnter = node.enter()
+                .append("g")
+                .attr("transform", function (d) {
+                    //var prev_height = (d.parent) ? d.parent.dim[1] : 0;
+                    return "translate(" + source.x0 + "," + source.y0 + ")";
+                });
+
+            //var bbox = nodeText.node().getBBox();
+            var rectangle = nodeEnter.append("rect")
+                .attr("width", function (d) {
+                    return d.dim[0] + 5;
+                })
+                .attr("height", function (d) {
+                    return d.dim[1] + 10;
+                })
+                .attr("class", "lightBlueBox")
+                .style("fill-opacity", 1)
+                .style("stroke", "#666")
+                .style("stroke-width", "1.5px")
+                .style("margin", "1x")
+                .style("fill", "#7d7d7d");
+
+            var nodeText = nodeEnter.append("svg:text")
+                .attr("x", function (d) {
+                    return d.dim[0];
+                })
+                .attr("y", function (d) {
+                    return d.y_value[0];
+                })
+                .attr("text-anchor", function (d) {
+                    return d.children || d._children ? "end" : "start";
+                })
+                .attr("id", function (d) {
+                    return d.name + d.id;
+                })
+                .text(function (d) {
+                    var flags_str = "";
+                    if (d.flags) {
+                        flags_str += d.flags.join("\n");
+                    }
+                    return d.title;//+ flags_str;
+                    //return d.title;
+                });//.selectAll("tspan").data(function(d){return d.flags;}).enter().append("tspan").text(function(flag){
+//                    return flag;
+//                });
+
+            nodes.forEach(function (n) {
+                if (n.flags) {
+                    var textElem = $("#" + n.name + n.id);
+                    n.flags.forEach(function (flag, index) {
+                        var tspan = document.createElementNS("http://www.w3.org/2000/svg", "tspan");
+                        $(tspan).text(flag);
+                        $(tspan).attr("x", n.dim[0]);
+                        $(tspan).attr("y", n.y_value[index + 1]);
+                        textElem.append(tspan);
+
+                    });
+                }
+            });
+
+            // Transition nodes to their new position.
+            var nodeUpdate = node.transition()
+                .duration(duration)
+                .attr("transform", function (d) {
+                    var prev_height = (d.parent) ? d.parent.dim[1] : 0;
+                    var height = d.y + prev_height;
+                    //console.log(prev_height);
+                    return "translate(" + (d.x - d.dim[0] / 2) + "," + d.y + ")";
+                });
+
+            // Transition exiting nodes to the parent   's new position.
+            var nodeExit = node.exit().transition()
+                .duration(duration)
+                .attr("transform", function (d) {
+                    return "translate(" + source.x + "," + source.y + ")";
+                })
+                .remove();
+
+            // Update the links…
+            var link = svg.selectAll("path.link")
+                .data(links);
+            //, function (d) {
+            //          return d.target.id;
+            //    });
+
+            // Enter any new links at the parent's previous position.
+            link.enter().insert("path", "g")
+                .attr("class", "link")
+                .attr("d", function (d) {
+                    var o = {x: source.y0, y: source.x0 };
+                    return diagonal({source: o, target: o});
+                });
+            /*.attr("x1", function (d){
+             d.source.x;
+             })
+             .attr("y1", function (d){
+             d.source.y+ d.source.dim[1];
+             })
+             .attr("x2", function (d){
+             d.target.x;
+             })
+             .attr("y2", function (d){
+             d.target.y;
+             });
+
+             .attr("transform", function (d) {
+             var prev_height = 0;
+             if (d.source.parent){
+             prev_height=d.source.parent.dim[1];
+             }
+             var height = d.source.y + prev_height;
+             //console.log(prev_height);
+             return "translate(" + 0 + "," + 0 + ")";
+             })
+             .attr("d", function (d) {
+             var o = {x: source.y0 , y: source.x0 };
+             return diagonal({source: o, target: o});
+             });
+             */
+            // Transition links to their new position.
+            link.transition()
+                .duration(duration)
+                .attr("d", diagonal);
+
+            // Transition exiting nodes to the parent's new position.
+            /*link.exit().transition()
+             .duration(duration)
+             .attr("d", function (d) {
+             var o = {x: source.y0 + (source.dim[1] / 2), y: source.x0 + (source.dim[0] / 2)};
+             return diagonal({source: o, target: o});
+             })
+             .remove();
+             */
+            // Stash the old positions for transition.
+            nodes.forEach(function (d) {
+                d.x0 = d.y;
+                d.y0 = d.x;
+            });
+        };
+        // Toggle children on click.
+        function click2(d) {
+            if (d.children) {
+                d._children = d.children;
+                d.children = null;
+            } else {
+                d.children = d._children;
+                d._children = null;
+            }
+            if (d.type === "TreeNode") {
+                update2(d);
+            }
+            else {
+                update(d, d.id);
+            }
+        };
+    }
 
     return {
         renderTableMetaData: function (jsData) {
@@ -461,6 +728,7 @@ queralyzer.App = (function () {
                 dataType: "json",
                 success: function (result) {
                     queralyzer.App.renderTree(result);
+                    queralyzer.App.createExplainTree();
                 },
                 error: function (e) {
                     alert(e.responseText);
@@ -573,8 +841,7 @@ queralyzer.App = (function () {
             queralyzer.App.addTableNames();
             $('#indexTypeHash').prop('checked', false);
             $('#indexTypeBtree').prop('checked', false);
-            $('#isNullable').prop('checked', false);
-            $('#nonUnique').prop('checked', false);
+            $('#Unique').prop('checked', false);
             $('#new-index-name').prop('value', null);
             selectedIndexData = null;
             // Myisam and Innodb supports only Btree index type, so let's make it default
@@ -669,8 +936,7 @@ queralyzer.App = (function () {
             $('#column-name-select2').empty();
             $('#indexTypeHash').prop('checked', false);
             $('#indexTypeBtree').prop('checked', false);
-            $('#isNullable').prop('checked', false);
-            $('#nonUnique').prop('checked', false);
+            $('#Unique').prop('checked', false);
             selectedIndexData = null;
         },
         displayIndexData: function () {
@@ -700,16 +966,15 @@ queralyzer.App = (function () {
                         }
                     });
 
-                    if (indexData[index].indexType === 'HASH') {
-                        $('#indexTypeHash').prop('checked', true);
-                    } else if (indexData[index].indexType === 'BTREE') {
-                        $('#indexTypeBtree').prop('checked', true);
-                    }
-                    if (indexData[index].isNullable === true) {
-                        $('#isNullable').prop('checked', true);
-                    }
-                    if (indexData[index].nonUnique === true) {
-                        $('#nonUnique').prop('checked', true);
+                    /*if (indexData[index].indexType === 'HASH') {
+                     $('#indexTypeHash').prop('checked', true);
+                     } else if (indexData[index].indexType === 'BTREE') {
+                     $('#indexTypeBtree').prop('checked', true);
+                     } */
+                    //Hash is not used by MyIsam or InnoDB
+                    $('#indexTypeBtree').prop('checked', true);
+                    if (indexData[index].Unique === true) {
+                        $('#Unique').prop('checked', true);
                     }
 
                 }
@@ -720,8 +985,7 @@ queralyzer.App = (function () {
             var tableSelected = $('#table-name-select').val(),
                 columnSelected = $('#column-name-select2').val(),
                 indexTypeSelected = $('input[name=indexType]:checked').val(),
-                isNullableSelected = $('#isNullable').prop('checked'),
-                nonUniqueSelected = $('#nonUnique').prop('checked'),
+                uniqueSelected = $('#Unique').prop('checked'),
                 indexSelected,
                 newIndexObj,
                 cols,
@@ -729,22 +993,29 @@ queralyzer.App = (function () {
             if ($('#new-index-name').val() !== "") {
                 indexSelected = $('#new-index-name').val();
                 cols = JSON.stringify(columnSelected.toString().split(","));
+                if ($('#new-index-name').val() === "PRIMARY KEY") {
+                    uniqueSelected = true;
+                    $('#Unique').prop('checked', true);
+                }
                 newIndexJsnText = '{"cardinality":2, "columnCount": ' + columnSelected.length +
                     ', "indexColumns": ' + cols + ', "indexName": "' +
                     indexSelected + '", "indexType": "' + indexTypeSelected +
-                    '","isNullable": ' + isNullableSelected + ', "nonUnique": ' + nonUniqueSelected +
+                    '", "Unique": ' + uniqueSelected +
+                    ', "Spatial": ' + "false" +
+                    ', "FullText": ' + "false" +
                     ', "schemaName":null, "storageEngine":null, "tableName":"' + tableSelected + '"}';
+                //console.log(newIndexJsnText);
                 newIndexObj = JSON.parse(newIndexJsnText);
                 indexData.push(newIndexObj);
 
             } else {
                 indexSelected = $('#index-name-select').val();
                 //updating the selected index.
-                selectedIndexData.isNullable = isNullableSelected;
-                selectedIndexData.nonUnique = nonUniqueSelected;
+                selectedIndexData.Unique = uniqueSelected;
+                selectedIndexData.Spatial = "false";
+                selectedIndexData.FullText = "false";
                 selectedIndexData.indexType = indexTypeSelected;
                 //alert(indexTypeSelected);
-                //alert(selectedIndexData.isNullable);
                 selectedIndexData.indexColumns = $('#column-name-select2').val();
                 selectedIndexData.columnCount = selectedIndexData.indexColumns.length;
                 //alert(selectedIndexData.indexColumns);
@@ -760,6 +1031,7 @@ queralyzer.App = (function () {
                 success: function (result) {
                     queralyzer.App.renderTree(result);
                     queralyzer.App.renderIndexMetaData(indexData);
+                    queralyzer.App.createExplainTree();
                 },
                 error: function (e) {
                     alert(e.responseText);
@@ -767,6 +1039,24 @@ queralyzer.App = (function () {
             });
             $('#indexModal').modal('hide');
 
+        },
+        createExplainTree: function () {
+            var tree_in_json,
+                tree_layout;
+            $.ajax({
+                type: "GET",
+                asynch: "false",
+                url: "/explainjson",
+                datatype: "json",
+                success: function (result) {
+                    tree_in_json = Tree.generateTree(result);
+                    console.log((tree_in_json));
+                    createExplainTreeLayout(tree_in_json);
+                },
+                error: function (e) {
+                    alert(e.responseText);
+                }
+            });
         },
         hideIndexSelect: function () {
             $('#index-name-select').css("display", 'none');
