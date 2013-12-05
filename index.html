@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="css/queralyzer.css">
 
     <link rel="stylesheet" href="/codemirror/codemirror.css">
+    <link rel="stylesheet" href="/css/visual_explain.css">
 
     <script src="js/lib/d3.min.js" type="text/javascript"></script>
     <script src="js/lib/jquery.min.js"></script>
@@ -20,6 +21,7 @@
     <script src="js/app/TypeFactory.js" type="text/javascript"></script>
     <script src="js/app/ExplainTree.js" type="text/javascript"></script>
     <script src="js/app/App.js" type="text/javascript"></script>
+    <script src="js/app/Tree.js" type="text/javascript"></script>
     <script src="bootstrap/js/bootstrap.min.js" type="text/javascript"></script>
 
     <script type="text/javascript">
@@ -83,7 +85,6 @@
                 queralyzer.App.hideIndexSelect();
                 $(this).attr("disabled", "disabled");
             });
-
             /* $.getJSON("data/access_plan_9.json", function (result) {
              queralyzer.App.renderTree(result);
              });
@@ -109,6 +110,27 @@
 
 
     </script>
+    <style>
+        .node {
+            cursor: pointer;
+        }
+
+        .node circle {
+            fill: #fff;
+            stroke: steelblue;
+            stroke-width: 1.5px;
+        }
+
+        .node text {
+            font: 10px sans-serif;
+        }
+
+        .link {
+            fill: none;
+            stroke: #ccc;
+            stroke-width: 1.5px;
+        };
+    </style>
 </head>
 <body>
 <header>
@@ -164,6 +186,7 @@
                         <li class="active"><a href="#treeContainer" data-toggle="tab">Access Plan</a></li>
                         <li><a href="#rowContainer" data-toggle="tab">Explain Rows</a></li>
                         <li><a href="#help" data-toggle="tab">Help</a></li>
+                        <li><a href="#explainTreeContainer" data-toggle="tab">Explain Tree</a></li>
                     </ul>
                     <div class="tab-content">
                         <div class="tab-pane active result" id="treeContainer">
@@ -171,6 +194,8 @@
                         <div class="tab-pane result" id="rowContainer">
                         </div>
                         <div class="tab-pane result" id="help">
+                        </div>
+                        <div class="tab-pane result" id="explainTreeContainer">
                         </div>
                     </div>
                 </div>
@@ -206,10 +231,11 @@
                 <a href="#" id="removeColumns">remove</a>
             </div>
             Index Type:
-            <input type="radio" name="indexType" id="indexTypeHash" value="HASH">Hash
+            <input type="radio" name="indexType" id="indexTypeHash" value="HASH" onclick="checked=false; alert('Hash is not used by MyIsam or InnoDB')">Hash
             <input type="radio" name="indexType" id="indexTypeBtree" value="BTREE">Btree<br>
-            <input type="checkbox" id="isNullable" value="true" default="false">Nullable<br>
-            <input type="checkbox" id="nonUnique" value="true" default="false">Non Unique
+            <input type="checkbox" id="Unique" value="true" default="false">unique<br>
+            <input type="checkbox" id="Spatial" value="true" default="false" disabled = true>spatial<br>
+            <input type="checkbox" id="Full-Text" value="true" default="false" disabled = true>fulltext
         </form>
     </div>
     <div class="modal-footer">
