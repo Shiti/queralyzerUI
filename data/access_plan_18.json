@@ -1,0 +1,38 @@
+[
+    {
+        "id": "1",
+        "select_type": "SIMPLE",
+        "table": "ur",
+        "type": "system",
+        "possible_keys": null,
+        "key": null,
+        "key_len": null,
+        "ref": null,
+        "rows": "1",
+        "Extra": "(null)    "
+    },
+    {
+        "id": "1",
+        "select_type": "SIMPLE",
+        "table": "b",
+        "type": "const",
+        "possible_keys": "PRIMARY",
+        "key": "PRIMARY",
+        "key_len": "4",
+        "ref": "const",
+        "rows": "1",
+        "Extra": "(null)    "
+    },
+    {
+        "id": "1",
+        "select_type": "SIMPLE",
+        "table": "p",
+        "type": "ref",
+        "possible_keys": "i2",
+        "key": "i2",
+        "key_len": "4",
+        "ref": "const",
+        "rows": "1",
+        "Extra": null
+    }
+]
